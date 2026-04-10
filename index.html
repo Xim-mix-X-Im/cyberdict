@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberDict — Networking & Cybersecurity Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS CUSTOM PROPERTIES
+   ============================================================ */
+:root {
+  --bg:          #0a0e1a;
+  --bg2:         #0f1629;
+  --bg3:         #151d35;
+  --bg4:         #1a2240;
+  --border:      #1e2d4d;
+  --border2:     #263560;
+  --text:        #e2e8f0;
+  --text2:       #94a3b8;
+  --text3:       #64748b;
+  --accent:      #38bdf8;
+  --accent2:     #0ea5e9;
+  --glow:        rgba(56,189,248,0.15);
+
+  --c-network:   #0ea5e9;
+  --c-protocol:  #10b981;
+  --c-security:  #ef4444;
+  --c-crypto:    #7c3aed;
+  --c-attack:    #f97316;
+  --c-wireless:  #06b6d4;
+  --c-web:       #ec4899;
+  --c-hardware:  #f59e0b;
+  --c-devsecops: #06b6d4;
+  --c-linux:     #4ade80;
+  --c-windows:   #60a5fa;
+  --c-macos:     #fb923c;
+  --c-multi:     #a78bfa;
+
+  --radius:      8px;
+  --radius2:     12px;
+  --radius3:     16px;
+  --shadow:      0 4px 24px rgba(0,0,0,0.4);
+  --transition:  0.2s ease;
+
+  --nav-h:       60px;
+  --sidebar-w:   220px;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: 'Syne', system-ui, sans-serif;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+code, pre, .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+input { font-family: inherit; }
+input:focus { outline: none; }
+
+ul { list-style: none; }
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ============================================================
+   TOP NAVIGATION
+   ============================================================ */
+#topnav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  background: rgba(10,14,26,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  gap: 0.5rem;
+  z-index: 1000;
+}
+
+.nav-logo {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+  margin-right: 1.5rem;
+  white-space: nowrap;
+}
+.nav-logo span { color: var(--text2); font-weight: 400; }
+
+.nav-tabs { display: flex; gap: 0.25rem; flex: 1; }
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+}
+.nav-tab:hover { background: var(--bg3); color: var(--text); }
+.nav-tab.active {
+  background: var(--glow);
+  color: var(--accent);
+  border: 1px solid rgba(56,189,248,0.2);
+}
+
+/* ============================================================
+   SECTIONS (PAGES)
+   ============================================================ */
+.section {
+  display: none;
+  margin-top: var(--nav-h);
+  min-height: calc(100vh - var(--nav-h));
+}
+.section.active { display: block; }
+
+/* ============================================================
+   SECTION HEADER
+   ============================================================ */
+.section-header {
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.section-header h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+.section-header p { color: var(--text2); font-size: 0.95rem; }
+
+/* ============================================================
+   DICTIONARY LAYOUT
+   ============================================================ */
+#sec-dictionary .dict-layout {
+  display: flex;
+  height: calc(100vh - var(--nav-h) - 100px);
+}
+
+/* sidebar */
+#dict-sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sidebar-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 0.4rem;
+}
+
+.filter-group { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+  transition: background var(--transition), color var(--transition);
+}
+.filter-btn:hover { background: var(--bg3); color: var(--text); }
+.filter-btn.active { background: var(--glow); color: var(--accent); }
+
+.filter-btn .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.osi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+}
+.osi-btn {
+  padding: 0.35rem 0;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  transition: background var(--transition), color var(--transition);
+}
+.osi-btn:hover { background: var(--bg4); color: var(--text); }
+.osi-btn.active { background: var(--glow); color: var(--accent); border: 1px solid rgba(56,189,248,0.3); }
+
+.az-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+.az-btn {
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition), color var(--transition);
+}
+.az-btn:hover { background: var(--bg4); color: var(--text); }
+.az-btn.active { background: var(--glow); color: var(--accent); }
+
+/* dictionary main */
+#dict-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#dict-search-bar {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#dict-search {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.55rem 1rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  transition: border-color var(--transition);
+}
+#dict-search:focus { border-color: var(--accent); }
+#dict-search::placeholder { color: var(--text3); }
+
+.dict-count {
+  font-size: 0.8rem;
+  color: var(--text3);
+  white-space: nowrap;
+}
+
+#dict-cards {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* dict card */
+.dict-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  display: flex;
+}
+.dict-card:hover { border-color: var(--border2); box-shadow: var(--shadow); }
+.dict-card.open { border-color: var(--border2); }
+
+.card-stripe {
+  width: 4px;
+  flex-shrink: 0;
+}
+
+.card-body { flex: 1; padding: 0.75rem 1rem; }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.card-term {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.card-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+.card-osi-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background: var(--bg4);
+  color: var(--text3);
+}
+
+.card-desc-preview {
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-detail {
+  display: none;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.dict-card.open .card-detail { display: block; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.detail-item label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 0.2rem;
+}
+.detail-item p {
+  font-size: 0.83rem;
+  color: var(--text2);
+  line-height: 1.55;
+}
+.detail-item.full { grid-column: 1 / -1; }
+
+.detail-example {
+  margin-top: 0.5rem;
+  background: var(--bg3);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.8rem;
+  color: var(--c-linux);
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+}
+
+/* ============================================================
+   LEARNING PATH LAYOUT
+   ============================================================ */
+#sec-learning .learn-layout {
+  display: flex;
+  height: calc(100vh - var(--nav-h) - 100px);
+}
+
+#learn-sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 1rem 0.75rem;
+}
+
+.path-card {
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.path-card:hover { border-color: var(--border2); background: var(--bg4); }
+.path-card.active { border-color: var(--accent); background: var(--glow); }
+
+.path-card-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+}
+.path-card-meta {
+  font-size: 0.72rem;
+  color: var(--text3);
+}
+
+#learn-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* XP bar */
+.xp-bar-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.xp-bar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.xp-level-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.xp-val { font-size: 0.85rem; color: var(--text2); }
+.xp-bar-track {
+  height: 8px;
+  background: var(--bg4);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), #818cf8);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.xp-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+}
+.xp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.xp-stat-label { font-size: 0.7rem; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+.xp-stat-val { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+
+/* quiz question */
+.quiz-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1.5rem;
+}
+.quiz-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.quiz-path-name { font-size: 0.8rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
+.quiz-difficulty { display: flex; gap: 3px; }
+.quiz-star { font-size: 0.85rem; }
+.quiz-star.lit { color: #fbbf24; }
+.quiz-star.dim { color: var(--text3); }
+
+.quiz-q {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.quiz-options { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.quiz-opt {
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.9rem;
+  text-align: left;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+.quiz-opt:hover:not(:disabled) { border-color: var(--accent); background: var(--glow); }
+.quiz-opt.correct { border-color: #10b981; background: rgba(16,185,129,0.1); color: #10b981; }
+.quiz-opt.wrong   { border-color: #ef4444; background: rgba(239,68,68,0.1);   color: #ef4444; }
+.quiz-opt:disabled { cursor: not-allowed; }
+
+.quiz-explanation {
+  display: none;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border-left: 3px solid var(--accent);
+}
+.quiz-explanation.show { display: block; }
+.quiz-explanation p { font-size: 0.85rem; color: var(--text2); line-height: 1.6; }
+.quiz-explanation a { font-size: 0.8rem; }
+
+.quiz-next-btn {
+  margin-top: 1rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: var(--radius);
+  background: var(--accent2);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: none;
+  transition: opacity var(--transition);
+}
+.quiz-next-btn.show { display: inline-block; }
+.quiz-next-btn:hover { opacity: 0.85; }
+
+/* toast */
+#toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius2);
+  padding: 1rem 1.5rem;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 8px 32px rgba(56,189,248,0.3);
+  z-index: 9999;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  text-align: center;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ============================================================
+   SCHEMAS LAYOUT
+   ============================================================ */
+#sec-schemas .schema-layout { padding: 1rem 1.5rem; }
+
+.schema-tabs {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.schema-tab-btn {
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid transparent;
+  color: var(--text2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all var(--transition);
+}
+.schema-tab-btn:hover { background: var(--bg4); color: var(--text); }
+.schema-tab-btn.active { background: var(--glow); border-color: rgba(56,189,248,0.25); color: var(--accent); }
+
+.schema-pane { display: none; }
+.schema-pane.active { display: block; }
+
+/* OSI stack */
+.osi-layer-row {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.osi-layer-row:hover { border-color: var(--border2); }
+.osi-layer-row.open { border-color: var(--border2); }
+
+.osi-num {
+  width: 48px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.osi-info { flex: 1; padding: 0.75rem 1rem; }
+.osi-name { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+.osi-protocols { font-size: 0.78rem; color: var(--text3); margin-top: 0.15rem; }
+.osi-devices { font-size: 0.78rem; color: var(--text3); }
+.osi-arrow { padding: 0 0.75rem; color: var(--text3); font-size: 0.9rem; transition: transform var(--transition); }
+.osi-layer-row.open .osi-arrow { transform: rotate(90deg); }
+
+.osi-detail {
+  display: none;
+  padding: 0.75rem 1rem 1rem 1rem;
+  background: var(--bg3);
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.osi-layer-row.open .osi-detail { display: block; }
+
+/* attack surface */
+.attack-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0.75rem;
+}
+.attack-surf-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+.attack-surf-card:hover { border-color: var(--border2); }
+.attack-surf-card.open { border-color: var(--c-attack); }
+.attack-surf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+}
+.attack-surf-title { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; }
+.attack-surf-detail {
+  display: none;
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid var(--border);
+}
+.attack-surf-card.open .attack-surf-detail { display: block; }
+.kill-chain { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.5rem 0; }
+.kill-step {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: var(--bg4);
+  color: var(--text2);
+}
+.mitigations { font-size: 0.82rem; color: var(--text2); line-height: 1.6; }
+
+/* crypto flow timeline */
+.tls-timeline { position: relative; padding-left: 2rem; }
+.tls-timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent2), #7c3aed);
+}
+.tls-step {
+  position: relative;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+.tls-step::before {
+  content: '';
+  position: absolute;
+  left: -1.65rem;
+  top: 0.75rem;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--accent2);
+  border: 2px solid var(--bg);
+}
+.tls-step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color var(--transition);
+}
+.tls-step:hover .tls-step-header { border-color: var(--border2); }
+.tls-step.open .tls-step-header { border-color: var(--accent2); }
+.tls-step-num {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--glow);
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.tls-step-name { font-weight: 700; font-size: 0.92rem; color: var(--text); }
+.tls-step-dir { font-size: 0.75rem; color: var(--text3); margin-left: auto; }
+.tls-step-detail {
+  display: none;
+  padding: 0.75rem 1rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  font-size: 0.83rem;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.tls-step.open .tls-step-detail { display: block; }
+
+/* defense layers */
+.defense-rings { display: flex; flex-direction: column; gap: 0.5rem; max-width: 720px; }
+.defense-ring {
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: border-color var(--transition);
+}
+.defense-ring:hover { border-color: var(--border2); }
+.defense-ring.open { border-color: var(--border2); }
+.defense-ring-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg2);
+}
+.ring-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.ring-name { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+.ring-subtitle { font-size: 0.78rem; color: var(--text3); margin-left: auto; }
+.defense-ring-detail {
+  display: none;
+  padding: 0.75rem 1rem;
+  background: var(--bg3);
+  border-top: 1px solid var(--border);
+  font-size: 0.83rem;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.defense-ring.open .defense-ring-detail { display: block; }
+
+/* STRIDE */
+.stride-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.75rem;
+}
+.stride-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1rem;
+  transition: border-color var(--transition);
+}
+.stride-card:hover { border-color: var(--border2); }
+.stride-letter {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+.stride-name { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+.stride-def { font-size: 0.82rem; color: var(--text2); line-height: 1.5; margin-bottom: 0.5rem; }
+.stride-attacks, .stride-mit { font-size: 0.78rem; color: var(--text3); line-height: 1.5; }
+
+/* OSI vs TCP/IP table */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.compare-table th {
+  background: var(--bg3);
+  color: var(--text2);
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+}
+.compare-table td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.compare-table tr { cursor: pointer; transition: background var(--transition); }
+.compare-table tr:hover td { background: var(--bg3); }
+.compare-table tr.selected td { background: var(--glow); }
+
+.compare-detail-panel {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: var(--bg2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  color: var(--text2);
+  display: none;
+}
+.compare-detail-panel.show { display: block; }
+
+/* Port reference */
+.port-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.port-filter-btn {
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all var(--transition);
+}
+.port-filter-btn:hover { background: var(--bg4); color: var(--text); }
+.port-filter-btn.active { background: var(--glow); border-color: rgba(56,189,248,0.25); color: var(--accent); }
+
+.port-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.port-table th {
+  background: var(--bg3);
+  color: var(--text2);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+}
+.port-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); color: var(--text); }
+.port-table tr:hover td { background: var(--bg3); }
+.risk-badge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.risk-dangerous { background: rgba(239,68,68,0.15); color: #ef4444; }
+.risk-safe      { background: rgba(16,185,129,0.15); color: #10b981; }
+
+/* routing protocols */
+.view-toggle { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; }
+.view-btn {
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all var(--transition);
+}
+.view-btn:hover { background: var(--bg4); color: var(--text); }
+.view-btn.active { background: var(--glow); border-color: rgba(56,189,248,0.25); color: var(--accent); }
+
+.routing-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+.routing-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1rem;
+  transition: border-color var(--transition);
+}
+.routing-card:hover { border-color: var(--border2); }
+.routing-card-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+}
+.routing-card-full { font-size: 0.78rem; color: var(--text3); margin-bottom: 0.75rem; }
+.routing-attrs { display: flex; flex-direction: column; gap: 0.3rem; }
+.routing-attr { display: flex; gap: 0.5rem; font-size: 0.8rem; }
+.routing-attr-label { color: var(--text3); min-width: 110px; }
+.routing-attr-val { color: var(--text2); }
+
+/* decision tree */
+.dtree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 600px;
+}
+.dtree-node {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.dtree-question { font-weight: 700; color: var(--accent); margin-bottom: 0.4rem; }
+.dtree-answers { display: flex; flex-direction: column; gap: 0.25rem; }
+.dtree-answer {
+  display: flex;
+  gap: 0.5rem;
+  color: var(--text2);
+}
+.dtree-answer-key { color: var(--c-protocol); font-weight: 700; min-width: 30px; }
+
+/* osi layer view */
+.osi-layer-view-grid { display: flex; flex-direction: column; gap: 0.4rem; }
+.olv-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 1rem;
+  font-size: 0.83rem;
+}
+.olv-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.8rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+.olv-name { width: 130px; font-weight: 700; color: var(--text); }
+.olv-protocols { flex: 1; color: var(--text3); }
+
+/* network architecture */
+.arch-views { }
+.arch-view { display: none; }
+.arch-view.active { display: block; }
+.arch-diagram {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+.arch-tiers { display: flex; flex-direction: column; gap: 0.5rem; }
+.arch-tier {
+  border-radius: var(--radius);
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+.arch-tier:hover { border-color: var(--border2); }
+.arch-tier-header { display: flex; align-items: center; gap: 0.75rem; }
+.arch-tier-name { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+.arch-tier-devices { font-size: 0.78rem; color: var(--text3); margin-left: auto; }
+.arch-tier-detail {
+  display: none;
+  margin-top: 0.75rem;
+  font-size: 0.83rem;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.arch-tier.open .arch-tier-detail { display: block; }
+
+/* ============================================================
+   CLI & OS LAYOUT
+   ============================================================ */
+#sec-cli .cli-layout { padding: 1rem 1.5rem; }
+
+.cli-filter-bar {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.cli-filter-btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid transparent;
+  color: var(--text2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all var(--transition);
+}
+.cli-filter-btn:hover { background: var(--bg4); color: var(--text); }
+.cli-filter-btn.active { background: var(--glow); border-color: rgba(56,189,248,0.25); color: var(--accent); }
+
+.cli-pane { display: none; }
+.cli-pane.active { display: block; }
+
+.cli-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* cli card */
+.cli-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--transition);
+  display: flex;
+}
+.cli-card:hover { border-color: var(--border2); }
+.cli-card.open { border-color: var(--border2); }
+
+.cli-card-stripe { width: 4px; flex-shrink: 0; }
+
+.cli-card-body { flex: 1; padding: 0.75rem 1rem; }
+.cli-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.cli-cmd-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--c-linux);
+}
+.cli-os-badges { display: flex; gap: 0.25rem; }
+.os-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.os-badge-linux   { background: rgba(74,222,128,0.15); color: var(--c-linux); }
+.os-badge-windows { background: rgba(96,165,250,0.15); color: var(--c-windows); }
+.os-badge-macos   { background: rgba(251,146,60,0.15); color: var(--c-macos); }
+.os-badge-cyber   { background: rgba(239,68,68,0.15);  color: #ef4444; }
+
+.cli-copy-btn {
+  margin-left: auto;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  background: var(--bg4);
+  color: var(--text2);
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all var(--transition);
+}
+.cli-copy-btn:hover { background: var(--glow); color: var(--accent); }
+
+.cli-desc { margin-top: 0.3rem; font-size: 0.82rem; color: var(--text2); }
+
+.cli-detail {
+  display: none;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.cli-card.open .cli-detail { display: block; }
+
+.cli-example {
+  background: var(--bg3);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--c-linux);
+  margin-bottom: 0.5rem;
+  word-break: break-all;
+}
+.cli-note { font-size: 0.8rem; color: var(--text3); }
+
+/* shortcut keys */
+.kbd-row { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; margin: 0.4rem 0; }
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.5rem;
+  min-width: 28px;
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  border-bottom: 3px solid var(--border2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text);
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+.kbd-plus { color: var(--text3); font-size: 0.8rem; }
+
+/* workflows */
+.workflow-selector { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+.workflow-select-btn {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all var(--transition);
+}
+.workflow-select-btn:hover { background: var(--bg4); color: var(--text); }
+.workflow-select-btn.active { background: var(--glow); border-color: rgba(56,189,248,0.25); color: var(--accent); }
+
+.workflow-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1.5rem;
+}
+.workflow-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+.workflow-progress-bar {
+  height: 4px;
+  background: var(--bg4);
+  border-radius: 2px;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+.workflow-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent2), #10b981);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.workflow-step-dots { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.workflow-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.workflow-dot.done { background: var(--accent2); border-color: var(--accent2); }
+.workflow-dot.current { background: #10b981; border-color: #10b981; transform: scale(1.3); }
+
+.workflow-step-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.workflow-step-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+.workflow-why {
+  font-size: 0.82rem;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--bg2);
+  border-left: 3px solid var(--accent2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.workflow-cmd-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #0a0e1a;
+  border-radius: var(--radius);
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+}
+.workflow-cmd {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--c-linux);
+  word-break: break-all;
+}
+.workflow-copy-btn {
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  background: var(--bg4);
+  color: var(--text2);
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.workflow-copy-btn:hover { background: var(--glow); color: var(--accent); }
+.workflow-step-note { font-size: 0.78rem; color: var(--text3); line-height: 1.5; }
+
+.workflow-nav {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.workflow-nav-btn {
+  padding: 0.55rem 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 0.88rem;
+  transition: opacity var(--transition);
+}
+.workflow-back-btn { background: var(--bg4); color: var(--text2); }
+.workflow-back-btn:hover { color: var(--text); }
+.workflow-next-btn { background: var(--accent2); color: #fff; }
+.workflow-next-btn:hover { opacity: 0.85; }
+.workflow-step-counter { font-size: 0.82rem; color: var(--text3); margin-left: auto; }
+
+/* ============================================================
+   SVG NETWORK MAP
+   ============================================================ */
+.svg-wrap {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 1rem;
+}
+.netmap-detail {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  color: var(--text2);
+  display: none;
+}
+.netmap-detail.show { display: block; }
+.netmap-detail-title { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 0.4rem; }
+
+/* ============================================================
+   MISC UTILITIES
+   ============================================================ */
+.label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 0.4rem;
+}
+.mt-1 { margin-top: 0.4rem; }
+.mt-2 { margin-top: 0.75rem; }
+.mt-3 { margin-top: 1.25rem; }
+.fw7  { font-weight: 700; }
+.text2 { color: var(--text2); }
+.text3 { color: var(--text3); }
+.flex  { display: flex; }
+.gap-half { gap: 0.4rem; }
+.hidden { display: none !important; }
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text3);
+  font-size: 0.9rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .nav-logo span { display: none; }
+  .nav-tab { padding: 0.4rem 0.6rem; font-size: 0.78rem; }
+  #sec-dictionary .dict-layout { flex-direction: column; height: auto; }
+  #dict-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+  #sec-learning .learn-layout { flex-direction: column; height: auto; }
+  #learn-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+  .detail-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TOP NAVIGATION
+     ============================================================ -->
+<nav id="topnav">
+  <div class="nav-logo">Cyber<span>Dict</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" tabindex="0" onclick="showSection('dictionary')" onkeydown="if(event.keyCode===13)showSection('dictionary')">📚 Dictionary</button>
+    <button class="nav-tab" tabindex="0" onclick="showSection('learning')" onkeydown="if(event.keyCode===13)showSection('learning')">🎓 Learning Path</button>
+    <button class="nav-tab" tabindex="0" onclick="showSection('schemas')" onkeydown="if(event.keyCode===13)showSection('schemas')">📊 Schemas</button>
+    <button class="nav-tab" tabindex="0" onclick="showSection('cli')" onkeydown="if(event.keyCode===13)showSection('cli')">�� CLI &amp; OS</button>
+  </div>
+</nav>
+
+<!-- ============================================================
+     SECTION 1: DICTIONARY
+     ============================================================ -->
+<section id="sec-dictionary" class="section active">
+  <div class="section-header">
+    <h1>📚 Dictionary</h1>
+    <p>Networking &amp; Cybersecurity reference — 300+ terms across 9 categories</p>
+  </div>
+  <div class="dict-layout">
+    <!-- Sidebar -->
+    <aside id="dict-sidebar">
+      <div>
+        <div class="sidebar-section-title">Category</div>
+        <div class="filter-group" id="cat-filters">
+          <button class="filter-btn active" tabindex="0" onclick="setCatFilter('all')" onkeydown="if(event.keyCode===13)setCatFilter('all')">
+            <span class="dot" style="background:#94a3b8"></span> All
+          </button>
+          <button class="filter-btn" tabindex="0" onclick="setCatFilter('network')" onkeydown="if(event.keyCode===13)setCatFilter('network')">
+            <span class="dot" style="background:var(--c-network)"></span> Network
+          </button>
+          <button class="filter-btn" tabindex="0" onclick="setCatFilter('protocol')" onkeydown="if(event.keyCode===13)setCatFilter('protocol')">
+            <span class="dot" style="background:var(--c-protocol)"></span> Protocol
+          </button>
+          <button class="filter-btn" tabindex="0" onclick="setCatFilter('security')" onkeydown="if(event.keyCode===13)setCatFilter('security')">
+            <span class="dot" style="background:var(--c-security)"></span> Security
+          </button>
+          <button class="filter-btn" tabindex="0" onclick="setCatFilter('crypto')" onkeydown="if(event.keyCode===13)setCatFilter('crypto')">
+            <span class="dot" style="background:var(--c-crypto)"></span> Crypto
+          </button>
+          <button class="filter-btn" tabindex="0" onclick="setCatFilter('attack')" onkeydown="if(event.keyCode===13)setCatFilter('attack')">
+            <span class="dot" style="background:var(--c-attack)"></span> Attack
+          </button>
+          <button class="filter-btn" tabindex="0" onclick="setCatFilter('wireless')" onkeydown="if(event.keyCode===13)setCatFilter('wireless')">
+            <span class="dot" style="background:var(--c-wireless)"></span> Wireless
+          </button>
+          <button class="filter-btn" tabindex="0" onclick="setCatFilter('web')" onkeydown="if(event.keyCode===13)setCatFilter('web')">
+            <span class="dot" style="background:var(--c-web)"></span> Web
+          </button>
+          <button class="filter-btn" tabindex="0" onclick="setCatFilter('hardware')" onkeydown="if(event.keyCode===13)setCatFilter('hardware')">
+            <span class="dot" style="background:var(--c-hardware)"></span> Hardware
+          </button>
+          <button class="filter-btn" tabindex="0" onclick="setCatFilter('devsecops')" onkeydown="if(event.keyCode===13)setCatFilter('devsecops')">
+            <span class="dot" style="background:var(--c-devsecops)"></span> DevSecOps
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="sidebar-section-title">OSI Layer</div>
+        <div class="osi-grid" id="osi-filters">
+          <button class="osi-btn active" tabindex="0" onclick="setOsiFilter('all')" onkeydown="if(event.keyCode===13)setOsiFilter('all')">All</button>
+          <button class="osi-btn" tabindex="0" onclick="setOsiFilter(1)" onkeydown="if(event.keyCode===13)setOsiFilter(1)">L1</button>
+          <button class="osi-btn" tabindex="0" onclick="setOsiFilter(2)" onkeydown="if(event.keyCode===13)setOsiFilter(2)">L2</button>
+          <button class="osi-btn" tabindex="0" onclick="setOsiFilter(3)" onkeydown="if(event.keyCode===13)setOsiFilter(3)">L3</button>
+          <button class="osi-btn" tabindex="0" onclick="setOsiFilter(4)" onkeydown="if(event.keyCode===13)setOsiFilter(4)">L4</button>
+          <button class="osi-btn" tabindex="0" onclick="setOsiFilter(5)" onkeydown="if(event.keyCode===13)setOsiFilter(5)">L5</button>
+          <button class="osi-btn" tabindex="0" onclick="setOsiFilter(6)" onkeydown="if(event.keyCode===13)setOsiFilter(6)">L6</button>
+          <button class="osi-btn" tabindex="0" onclick="setOsiFilter(7)" onkeydown="if(event.keyCode===13)setOsiFilter(7)">L7</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="sidebar-section-title">A–Z Index</div>
+        <div class="az-grid" id="az-filters"></div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div id="dict-main">
+      <div id="dict-search-bar">
+        <input type="text" id="dict-search" placeholder="Search terms..." tabindex="0" oninput="renderDict()">
+        <span class="dict-count" id="dict-count">0 terms</span>
+      </div>
+      <div id="dict-cards"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 2: LEARNING PATH
+     ============================================================ -->
+<section id="sec-learning" class="section">
+  <div class="section-header">
+    <h1>🎓 Learning Path</h1>
+    <p>Cisco NetAcad-aligned quiz paths with XP progression</p>
+  </div>
+  <div class="learn-layout">
+    <!-- path sidebar -->
+    <aside id="learn-sidebar">
+      <div class="sidebar-section-title" style="padding:0 0.25rem 0.5rem">Paths</div>
+      <div id="path-list"></div>
+    </aside>
+    <!-- quiz area -->
+    <div id="learn-main">
+      <!-- XP bar -->
+      <div class="xp-bar-wrap">
+        <div class="xp-bar-top">
+          <div class="xp-level-name" id="xp-level-name">Rookie</div>
+          <div class="xp-val" id="xp-val">0 XP</div>
+        </div>
+        <div class="xp-bar-track">
+          <div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div>
+        </div>
+        <div class="xp-stats">
+          <div class="xp-stat">
+            <span class="xp-stat-label">Correct</span>
+            <span class="xp-stat-val" id="stat-correct">0</span>
+          </div>
+          <div class="xp-stat">
+            <span class="xp-stat-label">Wrong</span>
+            <span class="xp-stat-val" id="stat-wrong">0</span>
+          </div>
+          <div class="xp-stat">
+            <span class="xp-stat-label">Streak</span>
+            <span class="xp-stat-val" id="stat-streak">0 🔥</span>
+          </div>
+          <div class="xp-stat">
+            <span class="xp-stat-label">Total XP</span>
+            <span class="xp-stat-val" id="stat-xp">0</span>
+          </div>
+        </div>
+      </div>
+      <!-- quiz box -->
+      <div class="quiz-box" id="quiz-box">
+        <div class="quiz-meta">
+          <span class="quiz-path-name" id="quiz-path-name">Select a path</span>
+          <div class="quiz-difficulty" id="quiz-diff"></div>
+        </div>
+        <div class="quiz-q" id="quiz-q">Choose a learning path from the sidebar to begin your quiz.</div>
+        <div class="quiz-options" id="quiz-opts"></div>
+        <div class="quiz-explanation" id="quiz-expl"></div>
+        <button class="quiz-next-btn" id="quiz-next" tabindex="0" onclick="nextQuestion()" onkeydown="if(event.keyCode===13)nextQuestion()">Next Question →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 3: SCHEMAS
+     ============================================================ -->
+<section id="sec-schemas" class="section">
+  <div class="section-header">
+    <h1>📊 Schemas</h1>
+    <p>Interactive diagrams, reference tables, and security frameworks</p>
+  </div>
+  <div class="schema-layout">
+    <!-- Tab bar -->
+    <div class="schema-tabs" id="schema-tabs">
+      <button class="schema-tab-btn active" tabindex="0" onclick="showSchemaTab('osi-stack')" onkeydown="if(event.keyCode===13)showSchemaTab('osi-stack')">OSI Stack</button>
+      <button class="schema-tab-btn" tabindex="0" onclick="showSchemaTab('net-map')" onkeydown="if(event.keyCode===13)showSchemaTab('net-map')">Network Map</button>
+      <button class="schema-tab-btn" tabindex="0" onclick="showSchemaTab('attack-surface')" onkeydown="if(event.keyCode===13)showSchemaTab('attack-surface')">Attack Surface</button>
+      <button class="schema-tab-btn" tabindex="0" onclick="showSchemaTab('crypto-flow')" onkeydown="if(event.keyCode===13)showSchemaTab('crypto-flow')">Crypto Flow</button>
+      <button class="schema-tab-btn" tabindex="0" onclick="showSchemaTab('defense')" onkeydown="if(event.keyCode===13)showSchemaTab('defense')">Defense Layers</button>
+      <button class="schema-tab-btn" tabindex="0" onclick="showSchemaTab('stride')" onkeydown="if(event.keyCode===13)showSchemaTab('stride')">STRIDE</button>
+      <button class="schema-tab-btn" tabindex="0" onclick="showSchemaTab('osi-tcp')" onkeydown="if(event.keyCode===13)showSchemaTab('osi-tcp')">OSI vs TCP/IP</button>
+      <button class="schema-tab-btn" tabindex="0" onclick="showSchemaTab('ports')" onkeydown="if(event.keyCode===13)showSchemaTab('ports')">Port Reference</button>
+      <button class="schema-tab-btn" tabindex="0" onclick="showSchemaTab('routing')" onkeydown="if(event.keyCode===13)showSchemaTab('routing')">Routing Protocols</button>
+      <button class="schema-tab-btn" tabindex="0" onclick="showSchemaTab('net-arch')" onkeydown="if(event.keyCode===13)showSchemaTab('net-arch')">Network Architecture</button>
+    </div>
+
+    <!-- OSI Stack -->
+    <div class="schema-pane active" id="pane-osi-stack" role="tabpanel">
+      <div id="osi-stack-rows"></div>
+    </div>
+
+    <!-- Network Map -->
+    <div class="schema-pane" id="pane-net-map" role="tabpanel">
+      <div class="svg-wrap">
+        <svg id="netmap-svg" viewBox="0 0 760 420" width="760" style="max-width:100%">
+          <!-- Internet zone -->
+          <rect x="10" y="10" width="160" height="400" rx="12" fill="#0f1629" stroke="#1e2d4d" stroke-width="1.5"/>
+          <text x="90" y="32" text-anchor="middle" fill="#64748b" font-size="11" font-family="Syne,sans-serif" font-weight="700">INTERNET</text>
+          <!-- cloud -->
+          <ellipse cx="90" cy="80" rx="55" ry="28" fill="#0ea5e9" fill-opacity="0.08" stroke="#0ea5e9" stroke-opacity="0.3"/>
+          <text x="90" y="76" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Syne,sans-serif">☁️ ISP</text>
+          <text x="90" y="90" text-anchor="middle" fill="#64748b" font-size="9" font-family="JetBrains Mono,monospace">203.0.113.1</text>
+          <!-- ISP line -->
+          <line x1="90" y1="108" x2="90" y2="140" stroke="#1e2d4d" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <!-- Attacker -->
+          <rect x="50" y="145" width="80" height="36" rx="6" fill="#1a0a0a" stroke="#ef4444" stroke-opacity="0.4" stroke-width="1" class="netmap-node" data-node="attacker" style="cursor:pointer"/>
+          <text x="90" y="158" text-anchor="middle" fill="#ef4444" font-size="10" font-family="Syne,sans-serif">⚠️ Attacker</text>
+          <text x="90" y="173" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">198.51.100.5</text>
+          <!-- User -->
+          <rect x="50" y="200" width="80" height="36" rx="6" fill="#0a1a0a" stroke="#10b981" stroke-opacity="0.4" stroke-width="1" class="netmap-node" data-node="remote-user" style="cursor:pointer"/>
+          <text x="90" y="213" text-anchor="middle" fill="#10b981" font-size="10" font-family="Syne,sans-serif">👤 Remote</text>
+          <text x="90" y="228" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">VPN User</text>
+
+          <!-- DMZ zone -->
+          <rect x="190" y="10" width="190" height="400" rx="12" fill="#0f1629" stroke="#1e2d4d" stroke-width="1.5"/>
+          <text x="285" y="32" text-anchor="middle" fill="#64748b" font-size="11" font-family="Syne,sans-serif" font-weight="700">DMZ</text>
+          <!-- Perimeter FW -->
+          <rect x="220" y="45" width="130" height="36" rx="6" fill="#1a0e0e" stroke="#ef4444" stroke-opacity="0.6" stroke-width="1.5" class="netmap-node" data-node="perimeter-fw" style="cursor:pointer"/>
+          <text x="285" y="58" text-anchor="middle" fill="#ef4444" font-size="10" font-family="Syne,sans-serif">🔥 Perimeter FW</text>
+          <text x="285" y="73" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">ASA / FortiGate</text>
+          <line x1="170" y1="63" x2="220" y2="63" stroke="#ef4444" stroke-opacity="0.4" stroke-width="1.5"/>
+          <line x1="285" y1="81" x2="285" y2="105" stroke="#1e2d4d" stroke-width="1.5"/>
+          <!-- WAF -->
+          <rect x="220" y="110" width="130" height="36" rx="6" fill="#1a0a1a" stroke="#ec4899" stroke-opacity="0.5" stroke-width="1" class="netmap-node" data-node="waf" style="cursor:pointer"/>
+          <text x="285" y="123" text-anchor="middle" fill="#ec4899" font-size="10" font-family="Syne,sans-serif">🛡 WAF</text>
+          <text x="285" y="138" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">Web App Firewall</text>
+          <line x1="285" y1="146" x2="285" y2="166" stroke="#1e2d4d" stroke-width="1.5"/>
+          <!-- Web server -->
+          <rect x="210" y="170" width="75" height="36" rx="6" fill="#0a0e1a" stroke="#0ea5e9" stroke-opacity="0.5" stroke-width="1" class="netmap-node" data-node="web-srv" style="cursor:pointer"/>
+          <text x="247" y="183" text-anchor="middle" fill="#0ea5e9" font-size="9" font-family="Syne,sans-serif">🌐 Web</text>
+          <text x="247" y="197" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">nginx</text>
+          <!-- Mail server -->
+          <rect x="295" y="170" width="75" height="36" rx="6" fill="#0a0e1a" stroke="#10b981" stroke-opacity="0.5" stroke-width="1" class="netmap-node" data-node="mail-srv" style="cursor:pointer"/>
+          <text x="332" y="183" text-anchor="middle" fill="#10b981" font-size="9" font-family="Syne,sans-serif">📧 Mail</text>
+          <text x="332" y="197" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">Postfix</text>
+          <!-- DNS server -->
+          <rect x="252" y="222" width="70" height="34" rx="6" fill="#0a0e1a" stroke="#f59e0b" stroke-opacity="0.5" stroke-width="1" class="netmap-node" data-node="dns-srv" style="cursor:pointer"/>
+          <text x="287" y="235" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Syne,sans-serif">🔍 DNS</text>
+          <text x="287" y="248" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">BIND</text>
+          <!-- IDS -->
+          <rect x="220" y="270" width="130" height="34" rx="6" fill="#0a0e1a" stroke="#f97316" stroke-opacity="0.5" stroke-width="1" class="netmap-node" data-node="ids" style="cursor:pointer"/>
+          <text x="285" y="283" text-anchor="middle" fill="#f97316" font-size="10" font-family="Syne,sans-serif">👁 IDS/IPS</text>
+          <text x="285" y="297" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">Snort / Suricata</text>
+
+          <!-- Internal FW -->
+          <rect x="220" y="320" width="130" height="36" rx="6" fill="#1a0e0e" stroke="#ef4444" stroke-opacity="0.4" stroke-width="1" class="netmap-node" data-node="internal-fw" style="cursor:pointer"/>
+          <text x="285" y="333" text-anchor="middle" fill="#ef4444" font-size="10" font-family="Syne,sans-serif">🔥 Internal FW</text>
+          <text x="285" y="348" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">Segment control</text>
+          <line x1="285" y1="356" x2="285" y2="380" stroke="#1e2d4d" stroke-width="1.5"/>
+          <line x1="285" y1="380" x2="400" y2="380" stroke="#1e2d4d" stroke-width="1.5"/>
+          <line x1="400" y1="380" x2="400" y2="360" stroke="#1e2d4d" stroke-width="1.5"/>
+
+          <!-- Internal zone -->
+          <rect x="400" y="10" width="350" height="400" rx="12" fill="#0a100f" stroke="#10b981" stroke-opacity="0.2" stroke-width="1.5"/>
+          <text x="575" y="32" text-anchor="middle" fill="#64748b" font-size="11" font-family="Syne,sans-serif" font-weight="700">INTERNAL NETWORK</text>
+          <!-- Core switch -->
+          <rect x="490" y="45" width="170" height="36" rx="6" fill="#0a1510" stroke="#10b981" stroke-opacity="0.6" stroke-width="1.5" class="netmap-node" data-node="core-sw" style="cursor:pointer"/>
+          <text x="575" y="58" text-anchor="middle" fill="#10b981" font-size="10" font-family="Syne,sans-serif">🔀 Core Switch</text>
+          <text x="575" y="73" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">Catalyst 9000</text>
+          <!-- lines from core switch -->
+          <line x1="530" y1="81" x2="490" y2="130" stroke="#1e2d4d" stroke-width="1"/>
+          <line x1="575" y1="81" x2="575" y2="130" stroke="#1e2d4d" stroke-width="1"/>
+          <line x1="620" y1="81" x2="660" y2="130" stroke="#1e2d4d" stroke-width="1"/>
+          <line x1="575" y1="81" x2="450" y2="130" stroke="#1e2d4d" stroke-width="1"/>
+          <!-- VLAN boxes -->
+          <rect x="415" y="130" width="80" height="34" rx="6" fill="#0a0e1a" stroke="#0ea5e9" stroke-opacity="0.4" stroke-width="1" class="netmap-node" data-node="vlan10" style="cursor:pointer"/>
+          <text x="455" y="143" text-anchor="middle" fill="#0ea5e9" font-size="9" font-family="Syne,sans-serif">VLAN 10</text>
+          <text x="455" y="157" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">Mgmt</text>
+
+          <rect x="505" y="130" width="80" height="34" rx="6" fill="#0a0e1a" stroke="#7c3aed" stroke-opacity="0.4" stroke-width="1" class="netmap-node" data-node="vlan20" style="cursor:pointer"/>
+          <text x="545" y="143" text-anchor="middle" fill="#7c3aed" font-size="9" font-family="Syne,sans-serif">VLAN 20</text>
+          <text x="545" y="157" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">Users</text>
+
+          <rect x="595" y="130" width="80" height="34" rx="6" fill="#0a0e1a" stroke="#10b981" stroke-opacity="0.4" stroke-width="1" class="netmap-node" data-node="vlan30" style="cursor:pointer"/>
+          <text x="635" y="143" text-anchor="middle" fill="#10b981" font-size="9" font-family="Syne,sans-serif">VLAN 30</text>
+          <text x="635" y="157" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">Servers</text>
+
+          <rect x="685" y="130" width="50" height="34" rx="6" fill="#0a0e1a" stroke="#06b6d4" stroke-opacity="0.4" stroke-width="1" class="netmap-node" data-node="wifi-ap" style="cursor:pointer"/>
+          <text x="710" y="143" text-anchor="middle" fill="#06b6d4" font-size="9" font-family="Syne,sans-serif">📶 AP</text>
+          <text x="710" y="157" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">Wi-Fi</text>
+
+          <!-- workstations -->
+          <rect x="415" y="200" width="55" height="30" rx="5" fill="#0a0e1a" stroke="#0ea5e9" stroke-opacity="0.3" stroke-width="1"/>
+          <text x="442" y="214" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Syne,sans-serif">💻 PC</text>
+          <text x="442" y="225" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">.101</text>
+
+          <rect x="478" y="200" width="55" height="30" rx="5" fill="#0a0e1a" stroke="#0ea5e9" stroke-opacity="0.3" stroke-width="1"/>
+          <text x="505" y="214" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Syne,sans-serif">💻 PC</text>
+          <text x="505" y="225" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">.102</text>
+
+          <!-- file server -->
+          <rect x="540" y="200" width="80" height="30" rx="5" fill="#0a0e1a" stroke="#10b981" stroke-opacity="0.35" stroke-width="1" class="netmap-node" data-node="file-srv" style="cursor:pointer"/>
+          <text x="580" y="214" text-anchor="middle" fill="#10b981" font-size="9" font-family="Syne,sans-serif">🗄 File Server</text>
+          <text x="580" y="225" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">SMB/NFS</text>
+
+          <!-- SIEM -->
+          <rect x="630" y="200" width="100" height="30" rx="5" fill="#0a0e1a" stroke="#f97316" stroke-opacity="0.4" stroke-width="1" class="netmap-node" data-node="siem" style="cursor:pointer"/>
+          <text x="680" y="214" text-anchor="middle" fill="#f97316" font-size="9" font-family="Syne,sans-serif">📊 SIEM</text>
+          <text x="680" y="225" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">Splunk / ELK</text>
+
+          <!-- NTP/AAA -->
+          <rect x="415" y="250" width="80" height="30" rx="5" fill="#0a0e1a" stroke="#f59e0b" stroke-opacity="0.35" stroke-width="1" class="netmap-node" data-node="ntp-aaa" style="cursor:pointer"/>
+          <text x="455" y="262" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Syne,sans-serif">⏱ NTP/AAA</text>
+          <text x="455" y="273" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">RADIUS</text>
+
+          <!-- AD -->
+          <rect x="505" y="250" width="90" height="30" rx="5" fill="#0a0e1a" stroke="#60a5fa" stroke-opacity="0.35" stroke-width="1" class="netmap-node" data-node="ad" style="cursor:pointer"/>
+          <text x="550" y="262" text-anchor="middle" fill="#60a5fa" font-size="9" font-family="Syne,sans-serif">🏢 Active Dir</text>
+          <text x="550" y="273" text-anchor="middle" fill="#64748b" font-size="7" font-family="JetBrains Mono,monospace">LDAP/Kerberos</text>
+
+          <!-- zone label lines -->
+          <rect x="400" y="360" width="350" height="30" rx="6" fill="none" stroke="#10b981" stroke-opacity="0.15" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="575" y="380" text-anchor="middle" fill="#64748b" font-size="9" font-family="Syne,sans-serif">Zero Trust Segmented Internal</text>
+        </svg>
+      </div>
+      <div class="netmap-detail" id="netmap-detail">
+        <div class="netmap-detail-title" id="netmap-detail-title"></div>
+        <div id="netmap-detail-body"></div>
+      </div>
+    </div>
+
+    <!-- Attack Surface -->
+    <div class="schema-pane" id="pane-attack-surface" role="tabpanel">
+      <div class="attack-cards-grid" id="attack-surface-cards"></div>
+    </div>
+
+    <!-- Crypto Flow -->
+    <div class="schema-pane" id="pane-crypto-flow" role="tabpanel">
+      <h3 style="margin-bottom:1rem;color:var(--text)">TLS 1.3 Handshake Flow</h3>
+      <div class="tls-timeline" id="tls-timeline"></div>
+    </div>
+
+    <!-- Defense Layers -->
+    <div class="schema-pane" id="pane-defense" role="tabpanel">
+      <h3 style="margin-bottom:1rem;color:var(--text)">Defense-in-Depth — 7 Layers</h3>
+      <div class="defense-rings" id="defense-rings"></div>
+    </div>
+
+    <!-- STRIDE -->
+    <div class="schema-pane" id="pane-stride" role="tabpanel">
+      <div class="stride-grid" id="stride-cards"></div>
+    </div>
+
+    <!-- OSI vs TCP/IP -->
+    <div class="schema-pane" id="pane-osi-tcp" role="tabpanel">
+      <table class="compare-table" id="osi-tcp-table">
+        <thead>
+          <tr>
+            <th>OSI #</th>
+            <th>OSI Layer</th>
+            <th>TCP/IP Layer</th>
+            <th>TCP/IP Name</th>
+            <th>Key Protocols</th>
+          </tr>
+        </thead>
+        <tbody id="osi-tcp-body"></tbody>
+      </table>
+      <div class="compare-detail-panel" id="osi-tcp-detail"></div>
+    </div>
+
+    <!-- Port Reference -->
+    <div class="schema-pane" id="pane-ports" role="tabpanel">
+      <div class="port-filters" id="port-filters">
+        <button class="port-filter-btn active" tabindex="0" onclick="setPortFilter('all')" onkeydown="if(event.keyCode===13)setPortFilter('all')">All</button>
+        <button class="port-filter-btn" tabindex="0" onclick="setPortFilter('tcp')" onkeydown="if(event.keyCode===13)setPortFilter('tcp')">TCP</button>
+        <button class="port-filter-btn" tabindex="0" onclick="setPortFilter('udp')" onkeydown="if(event.keyCode===13)setPortFilter('udp')">UDP</button>
+        <button class="port-filter-btn" tabindex="0" onclick="setPortFilter('dangerous')" onkeydown="if(event.keyCode===13)setPortFilter('dangerous')">Dangerous</button>
+        <button class="port-filter-btn" tabindex="0" onclick="setPortFilter('safe')" onkeydown="if(event.keyCode===13)setPortFilter('safe')">Secure</button>
+      </div>
+      <table class="port-table">
+        <thead>
+          <tr><th>Port</th><th>Protocol</th><th>Service</th><th>Description</th><th>Risk</th></tr>
+        </thead>
+        <tbody id="port-table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Routing Protocols -->
+    <div class="schema-pane" id="pane-routing" role="tabpanel">
+      <div class="view-toggle" id="routing-view-toggle">
+        <button class="view-btn active" tabindex="0" onclick="setRoutingView('cards')" onkeydown="if(event.keyCode===13)setRoutingView('cards')">Compare Cards</button>
+        <button class="view-btn" tabindex="0" onclick="setRoutingView('dtree')" onkeydown="if(event.keyCode===13)setRoutingView('dtree')">Decision Tree</button>
+        <button class="view-btn" tabindex="0" onclick="setRoutingView('osi')" onkeydown="if(event.keyCode===13)setRoutingView('osi')">OSI Layer View</button>
+      </div>
+      <div id="routing-cards-view" class="routing-cards"></div>
+      <div id="routing-dtree-view" class="dtree" style="display:none"></div>
+      <div id="routing-osi-view" class="osi-layer-view-grid" style="display:none"></div>
+    </div>
+
+    <!-- Network Architecture -->
+    <div class="schema-pane" id="pane-net-arch" role="tabpanel">
+      <div class="view-toggle" id="arch-view-toggle">
+        <button class="view-btn active" tabindex="0" onclick="setArchView('enterprise')" onkeydown="if(event.keyCode===13)setArchView('enterprise')">Enterprise Tiers</button>
+        <button class="view-btn" tabindex="0" onclick="setArchView('cloud')" onkeydown="if(event.keyCode===13)setArchView('cloud')">Cloud-Hybrid</button>
+        <button class="view-btn" tabindex="0" onclick="setArchView('dmz')" onkeydown="if(event.keyCode===13)setArchView('dmz')">DMZ &amp; VLANs</button>
+        <button class="view-btn" tabindex="0" onclick="setArchView('zerotrust')" onkeydown="if(event.keyCode===13)setArchView('zerotrust')">Zero Trust</button>
+      </div>
+      <div id="arch-enterprise" class="arch-view active">
+        <div class="arch-diagram">
+          <div class="arch-tiers" id="arch-enterprise-tiers"></div>
+        </div>
+      </div>
+      <div id="arch-cloud" class="arch-view">
+        <div class="arch-diagram" id="arch-cloud-content"></div>
+      </div>
+      <div id="arch-dmz" class="arch-view">
+        <div class="arch-diagram" id="arch-dmz-content"></div>
+      </div>
+      <div id="arch-zerotrust" class="arch-view">
+        <div class="arch-diagram" id="arch-zerotrust-content"></div>
+      </div>
+    </div>
+
+  </div><!-- end schema-layout -->
+</section>
+
+<!-- ============================================================
+     SECTION 4: CLI & OS
+     ============================================================ -->
+<section id="sec-cli" class="section">
+  <div class="section-header">
+    <h1>💻 CLI &amp; OS</h1>
+    <p>40+ commands across Windows, Linux, macOS + guided security workflows</p>
+  </div>
+  <div class="cli-layout">
+    <!-- filter bar -->
+    <div class="cli-filter-bar" id="cli-filter-bar">
+      <button class="cli-filter-btn active" tabindex="0" onclick="setCliFilter('all')" onkeydown="if(event.keyCode===13)setCliFilter('all')">All</button>
+      <button class="cli-filter-btn" tabindex="0" onclick="setCliFilter('windows')" onkeydown="if(event.keyCode===13)setCliFilter('windows')">Windows</button>
+      <button class="cli-filter-btn" tabindex="0" onclick="setCliFilter('linux')" onkeydown="if(event.keyCode===13)setCliFilter('linux')">Linux</button>
+      <button class="cli-filter-btn" tabindex="0" onclick="setCliFilter('macos')" onkeydown="if(event.keyCode===13)setCliFilter('macos')">macOS</button>
+      <button class="cli-filter-btn" tabindex="0" onclick="setCliFilter('cybersecurity')" onkeydown="if(event.keyCode===13)setCliFilter('cybersecurity')">Cybersecurity</button>
+      <button class="cli-filter-btn" tabindex="0" onclick="setCliFilter('workflows')" onkeydown="if(event.keyCode===13)setCliFilter('workflows')">⚙️ Workflows</button>
+    </div>
+    <!-- commands pane -->
+    <div class="cli-pane active" id="pane-cli-commands">
+      <div class="cli-cards-grid" id="cli-cards"></div>
+    </div>
+    <!-- workflows pane -->
+    <div class="cli-pane" id="pane-cli-workflows">
+      <div class="workflow-selector" id="workflow-selector"></div>
+      <div id="workflow-box-wrap"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Level-up toast -->
+<div id="toast"></div>
+
