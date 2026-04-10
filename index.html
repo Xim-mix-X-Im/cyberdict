@@ -2490,3 +2490,1278 @@ Examples:
   }
 ];
 
+
+// ============================================================
+// DATA — CLI COMMANDS
+// ============================================================
+const CLI_DATA = [
+  // ── WINDOWS ──────────────────────────────────────────────
+  { id:"ipconfig", os:["windows"], cat:"network", cmd:"ipconfig /all", desc:"Display full IP configuration including MAC addresses, DHCP, and DNS servers.", notes:"Use /release and /renew to cycle DHCP lease. /flushdns clears DNS cache.", risk:"low" },
+  { id:"netstat-w", os:["windows"], cat:"network", cmd:"netstat -ano", desc:"Display active TCP/UDP connections with PID. -a=all, -n=numeric, -o=PID.", notes:"Cross-reference PIDs with Task Manager or tasklist. Flag unexpected LISTEN ports.", risk:"low" },
+  { id:"route-w", os:["windows"], cat:"network", cmd:"route print", desc:"Display IPv4 and IPv6 routing tables including persistent static routes.", notes:"route add 10.0.0.0 mask 255.0.0.0 192.168.1.1 -p adds a persistent static route.", risk:"low" },
+  { id:"arp-w", os:["windows"], cat:"network", cmd:"arp -a", desc:"Display ARP cache mapping IP addresses to MAC addresses.", notes:"Duplicate IPs or a changed gateway MAC may indicate ARP spoofing.", risk:"low" },
+  { id:"nslookup", os:["windows","macos","linux"], cat:"network", cmd:"nslookup example.com 8.8.8.8", desc:"Query a specific DNS server for a hostname. Useful for testing DNS resolution.", notes:"Type set type=MX then query to check mail records. set type=ANY for all records.", risk:"low" },
+  { id:"tracert", os:["windows"], cat:"network", cmd:"tracert -d 8.8.8.8", desc:"Trace route to destination showing each hop. -d skips hostname resolution (faster).", notes:"Asterisks mean the hop dropped ICMP. Persistent high RTT at one hop indicates a bottleneck.", risk:"low" },
+  { id:"netsh-fw", os:["windows"], cat:"security", cmd:"netsh advfirewall firewall show rule name=all", desc:"List all Windows Firewall rules including name, direction, action, and ports.", notes:"Export: netsh advfirewall export policy.wfw. Import to restore.", risk:"low" },
+  { id:"sfc", os:["windows"], cat:"security", cmd:"sfc /scannow", desc:"System File Checker — scans and repairs corrupted Windows system files.", notes:"Run as Administrator. After SFC, run DISM /Online /Cleanup-Image /RestoreHealth if issues persist.", risk:"low" },
+  { id:"wmic-proc", os:["windows"], cat:"security", cmd:"wmic process get Caption,ProcessId,ParentProcessId,CommandLine", desc:"List running processes with full command lines and parent PIDs for malware analysis.", notes:"Check for cmd.exe or powershell.exe with suspicious parent processes.", risk:"low" },
+  { id:"tasklist", os:["windows"], cat:"security", cmd:"tasklist /svc /fo table", desc:"List running processes and their associated Windows services.", notes:"Compare against a clean baseline. Flag unsigned or unknown service hosts.", risk:"low" },
+  { id:"eventvwr", os:["windows"], cat:"security", cmd:"wevtutil qe Security /c:20 /rd:true /f:text", desc:"Query last 20 Security event log entries via CLI (no GUI needed).", notes:"Key events: 4625=failed logon, 4648=explicit credential use, 4688=new process, 7045=new service.", risk:"low" },
+  { id:"net-share", os:["windows"], cat:"security", cmd:"net share", desc:"List all active network shares including admin shares (C$, ADMIN$, IPC$).", notes:"Disable default admin shares if not needed: set AutoShareWks=0 in registry.", risk:"low" },
+  { id:"sc-query", os:["windows"], cat:"security", cmd:"sc query type= all state= all", desc:"List all Windows services and their current state.", notes:"Look for newly installed services with unusual binary paths. Check sc qc svcname for config.", risk:"low" },
+  { id:"ps-policy", os:["windows"], cat:"security", cmd:"Get-ExecutionPolicy -List", desc:"Show PowerShell execution policy for all scopes.", notes:"Set-ExecutionPolicy RemoteSigned -Scope CurrentUser is safest for user scripts. Bypass is dangerous.", risk:"low" },
+  { id:"auditpol", os:["windows"], cat:"security", cmd:"auditpol /get /category:*", desc:"Show current audit policy settings for all categories.", notes:"Enable: auditpol /set /subcategory:Logon /success:enable /failure:enable", risk:"low" },
+  { id:"gpresult", os:["windows"], cat:"security", cmd:"gpresult /h C:\\Temp\\gp.html /f", desc:"Generate HTML Group Policy results report for current user and computer.", notes:"Verify security baselines are applied. Check Winning GPO to find policy source.", risk:"low" },
+  // ── LINUX ─────────────────────────────────────────────────
+  { id:"ip-addr", os:["linux","macos"], cat:"network", cmd:"ip addr show", desc:"Display all network interfaces, IP addresses, and link state (replaces ifconfig).", notes:"ip link set eth0 up/down to toggle. ip addr add 10.0.0.1/24 dev eth0 to add IP.", risk:"low" },
+  { id:"ss", os:["linux"], cat:"network", cmd:"ss -tulnp", desc:"Display listening TCP/UDP sockets with process info. Modern replacement for netstat.", notes:"-t=TCP -u=UDP -l=listening -n=numeric -p=process. Faster than netstat on large systems.", risk:"low" },
+  { id:"ip-route", os:["linux"], cat:"network", cmd:"ip route show", desc:"Display IPv4 routing table. Shows default gateway and all static/dynamic routes.", notes:"ip route add default via 192.168.1.1 dev eth0 to set gateway. ip route flush cache to clear.", risk:"low" },
+  { id:"traceroute", os:["linux","macos"], cat:"network", cmd:"traceroute -n 8.8.8.8", desc:"Trace packet route to destination. -n skips DNS lookups for speed.", notes:"Use -I for ICMP (like Windows tracert), -T for TCP on port 80 to bypass ICMP blocks.", risk:"low" },
+  { id:"tcpdump", os:["linux","macos"], cat:"network", cmd:"tcpdump -i eth0 -w capture.pcap 'port 80 or port 443'", desc:"Capture network packets to a file for analysis in Wireshark.", notes:"Add -nn to suppress name resolution. BPF filter example: host 1.2.3.4 and tcp port 22", risk:"medium" },
+  { id:"iptables", os:["linux"], cat:"security", cmd:"iptables -L -n -v --line-numbers", desc:"List all iptables firewall rules with packet counts, line numbers, and numeric addresses.", notes:"Use nftables on modern systems. iptables-save saves rules. -I inserts at top of chain.", risk:"low" },
+  { id:"journalctl", os:["linux"], cat:"security", cmd:"journalctl -u ssh -n 50 --since '1 hour ago'", desc:"View systemd journal for SSH service, last 50 entries from the past hour.", notes:"-p err shows only errors. -f follows live. --no-pager for scripting.", risk:"low" },
+  { id:"last", os:["linux","macos"], cat:"security", cmd:"last -n 20 -i", desc:"Show last 20 login records with IP addresses from /var/log/wtmp.", notes:"lastb shows failed logins. lastlog shows last login per user.", risk:"low" },
+  { id:"find-suid", os:["linux"], cat:"security", cmd:"find / -perm -4000 -type f 2>/dev/null", desc:"Find all SUID files — can be used for privilege escalation if misconfigured.", notes:"Also check SGID: -perm -2000. Compare against a clean baseline. Flag non-standard SUID binaries.", risk:"medium" },
+  { id:"ps-aux", os:["linux","macos"], cat:"security", cmd:"ps aux --sort=-%cpu | head -20", desc:"List top 20 CPU-consuming processes with user, PID, and full command line.", notes:"ps -eo pid,ppid,cmd,%cpu --sort=-%cpu for custom columns. Check for unusual parent PIDs.", risk:"low" },
+  { id:"crontab-all", os:["linux","macos"], cat:"security", cmd:"for u in $(cut -f1 -d: /etc/passwd); do crontab -u $u -l 2>/dev/null; done", desc:"List all crontab entries for every user on the system.", notes:"Also check /etc/cron.d/, /etc/cron.daily/, /var/spool/cron/. Common persistence mechanism.", risk:"medium" },
+  { id:"lynis", os:["linux","macos"], cat:"security", cmd:"lynis audit system --quick", desc:"Comprehensive system hardening audit — checks 300+ security controls.", notes:"lynis show warnings after run. Score out of 100. CIS benchmark integration available.", risk:"low" },
+  { id:"openssl-check", os:["linux","macos"], cat:"security", cmd:"openssl s_client -connect example.com:443 -tls1_3 </dev/null 2>&1 | grep -E 'Protocol|Cipher|subject'", desc:"Test TLS connection, showing negotiated protocol version and cipher suite.", notes:"Remove -tls1_3 to see what the server selects. Use testssl.sh for comprehensive scan.", risk:"low" },
+  { id:"fail2ban", os:["linux"], cat:"security", cmd:"fail2ban-client status sshd", desc:"Show fail2ban jail status for SSH: banned IPs, total bans, filter hits.", notes:"fail2ban-client set sshd banip 1.2.3.4 to manually ban. Config in /etc/fail2ban/jail.local.", risk:"low" },
+  { id:"hashsum", os:["linux","macos"], cat:"security", cmd:"sha256sum /path/to/file", desc:"Compute SHA-256 hash of a file for integrity verification.", notes:"Compare against published hashes after downloads. md5sum is broken; prefer sha256sum or sha512sum.", risk:"low" },
+  // ── MACOS ─────────────────────────────────────────────────
+  { id:"pfctl", os:["macos"], cat:"security", cmd:"sudo pfctl -s rules", desc:"Show all active macOS pf (packet filter) firewall rules.", notes:"Enable PF: pfctl -e. Load ruleset: pfctl -f /etc/pf.conf. macOS ALF is a separate firewall.", risk:"low" },
+  { id:"launchctl", os:["macos"], cat:"security", cmd:"launchctl list | grep -v com.apple", desc:"List non-Apple launch agents and daemons — check for persistence mechanisms.", notes:"Also check ~/Library/LaunchAgents/, /Library/LaunchDaemons/. Common malware persistence location.", risk:"low" },
+  // ── CYBERSECURITY TOOLS ───────────────────────────────────
+  { id:"nmap-sV", os:["cybersecurity"], cat:"recon", cmd:"nmap -sV -sC -O -p- --open -T4 TARGET", desc:"Full port scan with service version detection, default scripts, and OS detection.", notes:"-p- scans all 65535 ports. --open shows only open ports. -T4 is aggressive and noisy.", risk:"high" },
+  { id:"nmap-stealth", os:["cybersecurity"], cat:"recon", cmd:"nmap -sS -sV -p 22,80,443,445,3389 -T2 TARGET", desc:"SYN stealth scan on common ports with slow timing to reduce IDS detection.", notes:"-sS requires root. -T2=polite timing. Use --randomize-hosts for target list scans.", risk:"high" },
+  { id:"nmap-vuln", os:["cybersecurity"], cat:"recon", cmd:"nmap --script vuln -p 80,443,445 TARGET", desc:"Run Nmap vulnerability scripts against common service ports.", notes:"vuln category includes ms17-010 (EternalBlue), ssl-heartbleed, http-slowloris, etc.", risk:"high" },
+  { id:"gobuster", os:["cybersecurity"], cat:"web", cmd:"gobuster dir -u https://TARGET -w /usr/share/wordlists/dirb/common.txt -x php,html,txt -t 50", desc:"Directory and file brute-force on web servers to discover hidden paths.", notes:"-x specifies file extensions. -t=threads. Use -k for self-signed TLS certs. Output: -o results.txt", risk:"high" },
+  { id:"nikto", os:["cybersecurity"], cat:"web", cmd:"nikto -h TARGET -ssl -p 443 -o nikto-out.html -Format htm", desc:"Web server vulnerability scanner — checks for misconfigs, outdated software, and dangerous files.", notes:"Not stealthy. Requires explicit permission. -Tuning 9 enables SQL injection checks.", risk:"high" },
+  { id:"hashcat-md5", os:["cybersecurity"], cat:"crypto", cmd:"hashcat -m 0 -a 0 hash.txt /usr/share/wordlists/rockyou.txt --force", desc:"Dictionary attack against MD5 hashes (-m 0) using rockyou wordlist.", notes:"-a 0=dictionary, -a 3=brute-force mask, -a 6=hybrid. -m 1000=NTLM, -m 1800=sha512crypt.", risk:"high" },
+  { id:"john", os:["cybersecurity"], cat:"crypto", cmd:"john --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt --format=NT", desc:"John the Ripper — password cracker supporting many hash formats.", notes:"john --list=formats to see supported hashes. john --show hashes.txt to display cracked passwords.", risk:"high" },
+  { id:"wireshark-filter", os:["cybersecurity","linux","macos"], cat:"network", cmd:"tshark -r capture.pcap -Y 'http.request.method == POST' -T fields -e http.file_data", desc:"CLI Wireshark: extract POST body data from a PCAP file for analysis.", notes:"Use -e tcp.payload for raw data. tshark -r cap.pcap -q -z conv,tcp for conversation stats.", risk:"medium" },
+  { id:"sqlmap", os:["cybersecurity"], cat:"web", cmd:"sqlmap -u 'https://TARGET/page?id=1' --dbs --batch --level=3 --risk=2", desc:"Automated SQL injection testing — enumerate databases with moderate detection evasion.", notes:"--batch accepts defaults non-interactively. --dump to extract data. Use with explicit permission only.", risk:"critical" },
+  { id:"airmon", os:["cybersecurity"], cat:"wireless", cmd:"airmon-ng start wlan0 && airodump-ng wlan0mon --write capture --output-format pcap", desc:"Enable monitor mode and capture all visible 802.11 traffic to file.", notes:"airodump-ng --bssid TARGET_MAC -c CHANNEL wlan0mon to target a specific access point.", risk:"high" },
+];
+
+// ============================================================
+// DATA — GUIDED SECURITY WORKFLOWS
+// ============================================================
+const WORKFLOWS = [
+  {
+    id:"nmap-recon",
+    title:"Network Recon with Nmap",
+    os:["linux","cybersecurity"],
+    desc:"Systematically discover hosts, open ports, and running services on a target network.",
+    steps:[
+      { title:"Host Discovery — Ping Sweep", cmd:"nmap -sn 192.168.1.0/24 -oG hosts.txt", desc:"Identify live hosts without port scanning. -sn disables port scan, -oG greppable output.", notes:"grep Up hosts.txt | awk '{print $2}' extracts live IPs for the next step." },
+      { title:"Quick Port Scan — Top 1000", cmd:"nmap -sV -T4 --open -iL hosts.txt", desc:"Service version scan on top 1000 ports of all discovered hosts.", notes:"Review output before proceeding. Note services, versions, and unusual port assignments." },
+      { title:"Full Port Scan — All 65535", cmd:"nmap -p- -sV -sC -O --open -T4 TARGET -oN full-scan.txt", desc:"Scan all ports with scripts and OS detection on priority target.", notes:"-oN saves readable output. This is slow and noisy — use only on priority target." },
+      { title:"Vulnerability Scripts", cmd:"nmap --script vuln,safe -p 80,443,445,22 TARGET", desc:"Run vulnerability NSE scripts against discovered open ports.", notes:"safe avoids disruptive scripts. Review each finding — false positives are common." },
+      { title:"UDP Scan — Key Services", cmd:"nmap -sU -p 53,67,68,69,123,161,162,500 TARGET --open -sV", desc:"Scan critical UDP ports: DNS, DHCP, TFTP, NTP, SNMP, IKE.", notes:"UDP scanning is slow. --open filters to confirmed open ports." },
+    ]
+  },
+  {
+    id:"web-recon",
+    title:"Web Application Reconnaissance",
+    os:["cybersecurity","linux"],
+    desc:"Comprehensive web app recon: technology stack, directories, subdomains, and vulnerabilities.",
+    steps:[
+      { title:"Technology Fingerprinting", cmd:"curl -sI https://TARGET | grep -iE 'server|x-powered-by|content-type|x-frame|x-content'", desc:"Identify server, framework, and security headers from HTTP response.", notes:"Missing headers (X-Frame-Options, CSP, HSTS) are findings in themselves." },
+      { title:"Directory Bruteforce", cmd:"gobuster dir -u https://TARGET -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,txt,bak,conf -t 40 -o gobuster.txt", desc:"Enumerate hidden directories and files using a common wordlist.", notes:"Check gobuster.txt for admin panels, backup files (.bak, .old), and config files." },
+      { title:"Subdomain Enumeration", cmd:"gobuster dns -d TARGET_DOMAIN -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -t 50", desc:"Discover subdomains via DNS brute-force.", notes:"Also check Certificate Transparency logs at crt.sh. Subdomains may have weaker security." },
+      { title:"Nikto Vulnerability Scan", cmd:"nikto -h https://TARGET -ssl -p 443 -Tuning 1,2,3,4,6,7,9 -o nikto.html -Format htm", desc:"Scan for common web vulnerabilities, misconfigurations, and information disclosure.", notes:"Review with CVSS context. Nikto has false positives — verify each finding manually." },
+      { title:"Manual Burp Suite Proxy", cmd:"export http_proxy=http://127.0.0.1:8080\ncurl -k https://TARGET --proxy http://127.0.0.1:8080", desc:"Route traffic through Burp Suite proxy for manual testing and crawling.", notes:"Enable Burp spider/crawler. Review all parameters for injection points. Check auth endpoints." },
+    ]
+  },
+  {
+    id:"linux-hardening",
+    title:"Linux Server Hardening",
+    os:["linux"],
+    desc:"Step-by-step CIS Benchmark-aligned hardening for Linux servers.",
+    steps:[
+      { title:"Update and Patch", cmd:"apt update && apt upgrade -y && apt autoremove -y", desc:"Apply all available security patches. Most breaches exploit known, patched vulnerabilities.", notes:"Enable automatic security updates: apt install unattended-upgrades (Debian/Ubuntu)." },
+      { title:"Disable Unnecessary Services", cmd:"systemctl list-unit-files --state=enabled | grep -v '@'\nsystemctl disable --now avahi-daemon cups bluetooth", desc:"Reduce attack surface by disabling services not required for the server's function.", notes:"ss -tlnp to see listening services. Each open port is a potential entry point." },
+      { title:"Configure SSH Hardening", cmd:"# Edit /etc/ssh/sshd_config:\n# PermitRootLogin no\n# PasswordAuthentication no\n# MaxAuthTries 3\n# X11Forwarding no\n# AllowTcpForwarding no\nsystemctl restart sshd", desc:"Harden SSH: disable root login, force key-based auth, limit retries.", notes:"Set up key-based auth BEFORE disabling password auth or you will be locked out." },
+      { title:"Configure Firewall (UFW)", cmd:"ufw default deny incoming\nufw default allow outgoing\nufw allow 22/tcp\nufw enable\nufw status verbose", desc:"Apply default-deny inbound policy, allow only required ports.", notes:"Adjust allowed ports for your services. Enable logging: ufw logging on." },
+      { title:"Enable Audit Logging", cmd:"apt install auditd -y\nsystemctl enable --now auditd\nauditctl -w /etc/passwd -p wa -k passwd-change\nauditctl -w /etc/sudoers -p wa -k sudoers-change", desc:"Enable auditd with rules for critical file monitoring.", notes:"Forward logs to SIEM. Minimum retention: 90 days." },
+      { title:"Run Lynis Audit", cmd:"apt install lynis -y && lynis audit system --quick 2>&1 | tee lynis-report.txt\ngrep -E 'Suggestion|Warning' lynis-report.txt", desc:"Run comprehensive security audit and review all warnings and suggestions.", notes:"Target hardening score of 80+. Re-run after changes to track progress." },
+    ]
+  },
+  {
+    id:"incident-response",
+    title:"Linux Incident Response",
+    os:["linux","cybersecurity"],
+    desc:"Triage and investigation steps for a suspected Linux host compromise.",
+    steps:[
+      { title:"Capture Volatile Data First", cmd:"date && uptime && who && w\nps auxf > /tmp/ir-processes.txt\nss -tulnp > /tmp/ir-netstat.txt", desc:"Capture time-sensitive data: current time, logged-in users, processes, network connections.", notes:"Do this BEFORE anything else. Volatile data is lost on shutdown." },
+      { title:"Check Active Network Connections", cmd:"ss -tulnp\nnetstat -antp | grep ESTABLISHED", desc:"Identify all active and listening connections — look for C2 callbacks.", notes:"Flag unexpected outbound connections to high ports or rare geographic destinations." },
+      { title:"Identify Suspicious Processes", cmd:"ps aux --sort=-%cpu | head -30\nlsof -i -P -n\nls -la /proc/$(pidof suspicious_process)/exe", desc:"Find processes with unusual parents, deleted executables, or suspicious names.", notes:"ls -la /proc/PID/exe shows [deleted] if binary was removed — common malware tactic." },
+      { title:"Check Persistence Mechanisms", cmd:"crontab -l 2>/dev/null\nfor u in $(cut -f1 -d: /etc/passwd); do crontab -u $u -l 2>/dev/null; done\nsystemctl list-unit-files --state=enabled", desc:"Enumerate all cron jobs and enabled services for malicious persistence.", notes:"Also check ~/.bashrc, ~/.profile, /etc/profile.d/, /etc/rc.local, and /etc/init.d/" },
+      { title:"Search for Webshells and IOCs", cmd:"find /var/www /opt /tmp /dev/shm -type f -newer /etc/passwd 2>/dev/null\ngrep -rn 'eval\\|base64_decode\\|system(' /var/www/ 2>/dev/null", desc:"Find recently modified files and search for webshell patterns in web roots.", notes:"Webshells often use eval/base64/system combinations. Compare against a clean baseline." },
+      { title:"Preserve Evidence", cmd:"sha256sum /tmp/ir-*.txt > /tmp/ir-checksums.txt\ntar czf /tmp/ir-evidence.tar.gz /tmp/ir-*.txt", desc:"Archive and hash collected evidence to establish integrity for chain of custody.", notes:"Document every action with a timestamp. Never work on original evidence." },
+    ]
+  },
+  {
+    id:"windows-hardening",
+    title:"Windows Server Hardening",
+    os:["windows"],
+    desc:"CIS Benchmark-aligned hardening steps for Windows Server environments.",
+    steps:[
+      { title:"Apply Security Patches", cmd:"# PowerShell (requires PSWindowsUpdate module):\nInstall-WindowsUpdate -AcceptAll -AutoReboot\n# Or: Settings > Windows Update > Check for updates", desc:"Ensure all Windows updates and security patches are applied.", notes:"Enable Windows Update and consider WSUS for centralised enterprise patch management." },
+      { title:"Audit Local Accounts and Groups", cmd:"net user\nnet localgroup Administrators\nGet-LocalGroupMember -Group Administrators", desc:"List all local accounts and Administrator group members — remove unnecessary accounts.", notes:"Rename or disable the default Administrator account. Remove rogue accounts from Administrators." },
+      { title:"Configure Audit Policy", cmd:"auditpol /set /category:\"Account Logon\" /success:enable /failure:enable\nauditpol /set /category:\"Logon/Logoff\" /success:enable /failure:enable\nauditpol /set /category:\"Object Access\" /success:enable /failure:enable\nauditpol /get /category:*", desc:"Enable audit policy for authentication, access, and privilege events.", notes:"Forward logs to SIEM. Key events: 4624,4625,4648,4688,4698,7045." },
+      { title:"Disable Dangerous Protocols", cmd:"# Disable SMBv1:\nSet-SmbServerConfiguration -EnableSMB1Protocol $false -Force\n# Disable LLMNR:\nSet-ItemProperty 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient' EnableMulticast 0", desc:"Disable legacy protocols: SMBv1, LLMNR, NetBIOS that are commonly exploited.", notes:"SMBv1 is exploited by EternalBlue (WannaCry). LLMNR/NetBIOS used for credential relay attacks." },
+      { title:"Configure Windows Defender and Firewall", cmd:"Get-MpComputerStatus | Select RealTimeProtectionEnabled,AntivirusEnabled\nnetsh advfirewall set allprofiles state on\nnetsh advfirewall set allprofiles firewallpolicy blockinbound,allowoutbound", desc:"Verify Defender is active and firewall blocks inbound by default.", notes:"Enable ASR rules in Defender. Use Controlled Folder Access for ransomware protection." },
+      { title:"Apply CIS Security Baseline", cmd:"# Download Microsoft Security Compliance Toolkit\n# Use LGPO.exe to apply baseline:\n# LGPO.exe /g .\\Security-Baseline-GPO\n# Verify with Policy Analyzer tool", desc:"Apply and verify Microsoft Security Baseline or CIS Windows Benchmark.", notes:"Available from Microsoft Security Compliance Toolkit. Policy Analyzer shows drift from baseline." },
+    ]
+  },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let catFilter = 'all';
+let osiFilter = 'all';
+let alphaFilter = 'all';
+let cliOsFilter = 'all';
+let schemasBuilt = false;
+let dtreeState = { step:0, history:[] };
+let archView = 'enterprise';
+let routingView = 'cards';
+let wfState = null;
+
+let qs = {
+  pathId:null, questions:[], idx:0, answered:false,
+  correct:0, wrong:0, streak:0, xp:0, level:0,
+  sessionCorrect:0, sessionWrong:0,
+};
+
+const XP_LEVELS = [
+  { name:'Rookie', min:0 },
+  { name:'Cadet', min:100 },
+  { name:'Associate', min:250 },
+  { name:'Analyst', min:500 },
+  { name:'Engineer', min:900 },
+  { name:'Architect', min:1400 },
+  { name:'Expert', min:2000 },
+  { name:'Master', min:2800 },
+];
+
+// ============================================================
+// DICT FUNCTIONS
+// ============================================================
+function filteredItems() {
+  const q = (document.getElementById('dict-search').value || '').toLowerCase().trim();
+  return DICT.filter(d => {
+    if (catFilter !== 'all' && d.cat !== catFilter) return false;
+    if (osiFilter !== 'all' && d.osi !== Number(osiFilter) && String(d.osi) !== String(osiFilter)) return false;
+    if (alphaFilter !== 'all' && !d.term.toUpperCase().startsWith(alphaFilter)) return false;
+    if (q && !(d.term + ' ' + d.short + ' ' + (d.full || '')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderDict() {
+  const items = filteredItems();
+  const el = document.getElementById('dict-cards');
+  const countEl = document.getElementById('dict-count');
+  if (countEl) countEl.textContent = items.length + ' terms';
+  if (!items.length) {
+    el.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--text-muted)">No terms match your filters.</div>';
+    return;
+  }
+  el.innerHTML = items.map(d => {
+    const relHtml = d.related && d.related.length
+      ? '<div style="margin-top:0.5rem;font-size:0.78rem;color:var(--text-muted)"><strong>Related:</strong> ' + d.related.join(', ') + '</div>'
+      : '';
+    const exHtml = d.example
+      ? '<div style="margin-top:0.5rem;padding:0.5rem 0.75rem;background:var(--bg4);border-radius:6px;font-size:0.82rem"><strong>Example:</strong> ' + d.example + '</div>'
+      : '';
+    const osiHtml = d.osi
+      ? '<span style="font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;background:var(--bg4);color:var(--text-muted)">L' + d.osi + '</span>'
+      : '';
+    return '<div class="dict-card cat-' + d.cat + '" tabindex="0" onclick="toggleCard(this)" onkeydown="if(event.keyCode===13)toggleCard(this)">' +
+      '<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">' +
+      '<span style="font-weight:700;font-size:1rem">' + d.term + '</span>' +
+      '<span style="font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:10px;background:var(--bg4)">' + d.cat + '</span>' +
+      osiHtml +
+      '<span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted)">▼</span>' +
+      '</div>' +
+      '<div style="margin-top:0.25rem;font-size:0.9rem;color:var(--text-muted)">' + d.short + '</div>' +
+      '<div class="card-body" style="display:none;margin-top:0.75rem">' +
+      '<p style="font-size:0.88rem;line-height:1.6">' + (d.full || d.short) + '</p>' +
+      exHtml + relHtml +
+      '</div></div>';
+  }).join('');
+}
+
+function render() { renderDict(); }
+
+function toggleCard(el) {
+  el.classList.toggle('expanded');
+  const body = el.querySelector('.card-body');
+  if (body) body.style.display = el.classList.contains('expanded') ? 'block' : 'none';
+  const arr = el.querySelector('span[style*="margin-left:auto"]');
+  if (arr) arr.textContent = el.classList.contains('expanded') ? '▲' : '▼';
+}
+
+function setCatFilter(cat) {
+  catFilter = cat;
+  document.querySelectorAll('#cat-filters .filter-btn').forEach(b => {
+    b.classList.toggle('active', (b.getAttribute('onclick') || '').includes("'" + cat + "'"));
+  });
+  renderDict();
+}
+
+function setOsiFilter(layer) {
+  osiFilter = layer;
+  document.querySelectorAll('#osi-filters .osi-btn').forEach(b => {
+    const oc = b.getAttribute('onclick') || '';
+    b.classList.toggle('active', layer === 'all' ? oc.includes("'all'") : oc.includes('(' + layer + ')'));
+  });
+  renderDict();
+}
+
+function filterAlpha(letter) {
+  alphaFilter = letter;
+  document.querySelectorAll('#az-filters .az-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-letter') === letter);
+  });
+  renderDict();
+}
+
+function buildAlphaIndex() {
+  const letters = [...new Set(DICT.map(d => d.term[0].toUpperCase()))].sort();
+  const el = document.getElementById('az-filters');
+  if (!el) return;
+  let html = '<button class="az-btn active" data-letter="all" onclick="filterAlpha(\'all\')" tabindex="0">All</button>';
+  letters.forEach(l => {
+    html += '<button class="az-btn" data-letter="' + l + '" onclick="filterAlpha(\'' + l + '\')" tabindex="0">' + l + '</button>';
+  });
+  el.innerHTML = html;
+}
+
+function toggleCluster(id) {
+  const el = document.getElementById('cluster-' + id);
+  if (el) el.classList.toggle('open');
+}
+
+function setAllClusters(open) {
+  document.querySelectorAll('.cluster-body').forEach(el => el.classList.toggle('open', open));
+}
+
+// ============================================================
+// LEARN FUNCTIONS
+// ============================================================
+function loadProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cyberdict-progress') || '{}');
+    qs.xp = saved.xp || 0;
+    qs.correct = saved.correct || 0;
+    qs.wrong = saved.wrong || 0;
+    qs.streak = saved.streak || 0;
+    qs.level = saved.level || 0;
+  } catch(e) {}
+  updateStats();
+  updateXPBar();
+  renderPaths();
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem('cyberdict-progress', JSON.stringify({
+      xp:qs.xp, correct:qs.correct, wrong:qs.wrong, streak:qs.streak, level:qs.level
+    }));
+  } catch(e) {}
+}
+
+function renderPaths() {
+  const el = document.getElementById('path-list');
+  if (!el) return;
+  el.innerHTML = PATHS.map(p =>
+    '<div class="path-item" style="padding:0.6rem 0.75rem;margin-bottom:0.4rem;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--bg2)" ' +
+    'data-pathid="' + p.id + '" onclick="startPath(\'' + p.id + '\')" tabindex="0" onkeydown="if(event.keyCode===13)startPath(\'' + p.id + '\')">' +
+    '<div style="font-weight:600;font-size:0.9rem">' + p.icon + ' ' + p.title + '</div>' +
+    '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.15rem">' + p.questions.length + ' questions · ' + p.desc + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function startPath(id) {
+  const path = PATHS.find(p => p.id === id);
+  if (!path) return;
+  qs.pathId = id;
+  qs.questions = [...path.questions].sort(() => Math.random() - 0.5);
+  qs.idx = 0;
+  qs.answered = false;
+  qs.sessionCorrect = 0;
+  qs.sessionWrong = 0;
+  document.querySelectorAll('.path-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-pathid') === id);
+  });
+  const nameEl = document.getElementById('quiz-path-name');
+  if (nameEl) nameEl.textContent = path.icon + ' ' + path.title;
+  showQuestion();
+}
+
+function showQuestion() {
+  if (!qs.questions.length) return;
+  const q = qs.questions[qs.idx];
+  if (!q) return;
+  qs.answered = false;
+  const qEl = document.getElementById('quiz-q');
+  const optsEl = document.getElementById('quiz-opts');
+  const explEl = document.getElementById('quiz-expl');
+  const nextBtn = document.getElementById('quiz-next');
+  const diffEl = document.getElementById('quiz-diff');
+  if (qEl) qEl.textContent = (qs.idx + 1) + '. ' + q.q;
+  if (diffEl) diffEl.textContent = 'Difficulty: ' + ('★'.repeat(q.diff || 1) + '☆'.repeat(3 - (q.diff || 1)));
+  if (explEl) { explEl.textContent = ''; explEl.className = 'quiz-explanation'; }
+  if (nextBtn) nextBtn.style.display = 'none';
+  if (optsEl) {
+    optsEl.innerHTML = q.opts.map((opt, i) =>
+      '<button class="quiz-opt" tabindex="0" onclick="answerQ(' + i + ')" onkeydown="if(event.keyCode===13)answerQ(' + i + ')">' +
+      String.fromCharCode(65 + i) + '. ' + opt + '</button>'
+    ).join('');
+  }
+}
+
+function answerQ(chosen) {
+  if (qs.answered) return;
+  qs.answered = true;
+  const q = qs.questions[qs.idx];
+  const isCorrect = chosen === q.ans;
+  const optsEl = document.getElementById('quiz-opts');
+  const explEl = document.getElementById('quiz-expl');
+  const nextBtn = document.getElementById('quiz-next');
+  if (optsEl) {
+    optsEl.querySelectorAll('.quiz-opt').forEach((btn, i) => {
+      btn.disabled = true;
+      if (i === q.ans) btn.classList.add('correct');
+      if (i === chosen && !isCorrect) btn.classList.add('wrong');
+    });
+  }
+  if (isCorrect) {
+    qs.sessionCorrect++;
+    qs.correct++;
+    qs.streak++;
+    qs.xp += (q.diff || 1) * 10 + (qs.streak >= 3 ? 5 : 0);
+    if (explEl) {
+      explEl.textContent = correctMsg() + (q.explain ? ' ' + q.explain : '');
+      explEl.className = 'quiz-explanation correct';
+    }
+    checkLevelUp();
+  } else {
+    qs.sessionWrong++;
+    qs.wrong++;
+    qs.streak = 0;
+    if (explEl) {
+      explEl.textContent = '✗ ' + (q.explain || 'Incorrect. The correct answer is ' + q.opts[q.ans]);
+      explEl.className = 'quiz-explanation wrong';
+    }
+  }
+  if (nextBtn) nextBtn.style.display = '';
+  updateStats();
+  updateXPBar();
+  saveProgress();
+}
+
+function nextQuestion() {
+  if (!qs.answered) return;
+  qs.idx++;
+  if (qs.idx >= qs.questions.length) showSessionComplete();
+  else showQuestion();
+}
+
+function retryQuestion() {
+  if (qs.idx < qs.questions.length) showQuestion();
+}
+
+function updateStats() {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('stat-correct', qs.correct);
+  set('stat-wrong', qs.wrong);
+  set('stat-streak', qs.streak + (qs.streak >= 3 ? ' 🔥' : ''));
+  set('stat-xp', qs.xp);
+}
+
+function updateXPBar() {
+  let li = 0;
+  for (let i = XP_LEVELS.length - 1; i >= 0; i--) {
+    if (qs.xp >= XP_LEVELS[i].min) { li = i; break; }
+  }
+  qs.level = li;
+  const lvl = XP_LEVELS[li];
+  const next = XP_LEVELS[li + 1];
+  const pct = next ? Math.min(100, ((qs.xp - lvl.min) / (next.min - lvl.min)) * 100) : 100;
+  const nameEl = document.getElementById('xp-level-name');
+  const valEl = document.getElementById('xp-val');
+  const fillEl = document.getElementById('xp-bar-fill');
+  if (nameEl) nameEl.textContent = lvl.name;
+  if (valEl) valEl.textContent = qs.xp + ' XP' + (next ? ' / ' + next.min : '');
+  if (fillEl) fillEl.style.width = pct + '%';
+}
+
+function checkLevelUp() {
+  const prev = qs.level;
+  updateXPBar();
+  if (qs.level > prev) {
+    const toast = document.getElementById('toast');
+    if (toast) {
+      toast.textContent = '🎉 Level Up! You are now ' + XP_LEVELS[qs.level].name + '!';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+  }
+}
+
+function showSessionComplete() {
+  const acc = qs.sessionCorrect + qs.sessionWrong > 0
+    ? Math.round(qs.sessionCorrect / (qs.sessionCorrect + qs.sessionWrong) * 100) : 0;
+  const qEl = document.getElementById('quiz-q');
+  const optsEl = document.getElementById('quiz-opts');
+  const explEl = document.getElementById('quiz-expl');
+  const nextBtn = document.getElementById('quiz-next');
+  if (qEl) qEl.textContent = 'Session Complete!';
+  if (optsEl) optsEl.innerHTML =
+    '<div style="text-align:center;padding:1.5rem">' +
+    '<div style="font-size:2rem;margin-bottom:0.5rem">' + acc + '% Accuracy</div>' +
+    '<div style="color:var(--text-muted);margin-bottom:1.5rem">' + qs.sessionCorrect + ' correct · ' + qs.sessionWrong + ' wrong</div>' +
+    '<div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">' +
+    '<button class="quiz-next-btn" onclick="restartSession()" tabindex="0">Restart Path</button>' +
+    '<button class="quiz-next-btn" onclick="exitQuiz()" tabindex="0" style="background:var(--bg3)">All Paths</button>' +
+    '</div></div>';
+  if (explEl) explEl.textContent = '';
+  if (nextBtn) nextBtn.style.display = 'none';
+}
+
+function restartSession() { if (qs.pathId) startPath(qs.pathId); }
+
+function nextLevelSession() { if (qs.pathId) startPath(qs.pathId); }
+
+function exitQuiz() {
+  qs.pathId = null;
+  qs.questions = [];
+  qs.idx = 0;
+  qs.answered = false;
+  document.querySelectorAll('.path-item').forEach(el => el.classList.remove('active'));
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const hide = (id) => { const el = document.getElementById(id); if (el) { el.innerHTML=''; el.textContent=''; } };
+  set('quiz-q', 'Choose a learning path from the sidebar to begin your quiz.');
+  set('quiz-path-name', 'Select a path');
+  set('quiz-diff', '');
+  hide('quiz-opts');
+  hide('quiz-expl');
+  const nb = document.getElementById('quiz-next'); if (nb) nb.style.display = 'none';
+}
+
+function correctMsg() {
+  const msgs = ['Correct!','Well done!','Excellent!','Spot on!','Perfect!','Right!'];
+  return '✓ ' + msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+// ============================================================
+// SECTION SWITCHING
+// ============================================================
+function showSection(mode) {
+  ['dictionary','learning','schemas','cli'].forEach(s => {
+    const sec = document.getElementById('sec-' + s);
+    if (sec) sec.classList.toggle('active', s === mode);
+  });
+  document.querySelectorAll('.nav-tab').forEach(b => {
+    b.classList.toggle('active', (b.getAttribute('onclick') || '').includes("'" + mode + "'"));
+  });
+  if (mode === 'schemas' && !schemasBuilt) buildAllSchemas();
+  if (mode === 'cli') renderCLI();
+  if (mode === 'learning') renderPaths();
+}
+
+// ============================================================
+// SCHEMA FUNCTIONS
+// ============================================================
+function showSchemaTab(id) {
+  document.querySelectorAll('.schema-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.schema-tab-btn').forEach(b => b.classList.remove('active'));
+  const pane = document.getElementById('pane-' + id);
+  if (pane) pane.classList.add('active');
+  document.querySelectorAll('.schema-tab-btn').forEach(b => {
+    if ((b.getAttribute('onclick') || '').includes("'" + id + "'")) b.classList.add('active');
+  });
+  if (!schemasBuilt) buildAllSchemas();
+  if (id === 'routing') buildRoutingSchema(routingView);
+  if (id === 'net-arch') buildNetarchSchema(archView);
+}
+
+function buildAllSchemas() {
+  if (schemasBuilt) return;
+  schemasBuilt = true;
+  buildOSIStack();
+  buildNetMap();
+  buildAttackGrid();
+  buildCryptoFlow();
+  buildDefenseLayers();
+  buildSTRIDEGrid();
+  buildCompareTable();
+  buildPortsTable();
+  buildRoutingSchema('cards');
+  buildNetarchSchema('enterprise');
+}
+
+// ── OSI STACK ──────────────────────────────────────────────
+function buildOSIStack() {
+  const el = document.getElementById('osi-stack-rows');
+  if (!el || el.dataset.built) return;
+  el.dataset.built = '1';
+  el.innerHTML = OSI_LAYERS.map(l =>
+    '<div style="border-left:4px solid ' + l.color + ';margin-bottom:0.5rem;border-radius:6px;overflow:hidden">' +
+    '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 1rem;background:var(--bg2);cursor:pointer" ' +
+    'data-osil="' + l.num + '" onclick="toggleOSI(' + l.num + ')" tabindex="0" onkeydown="if(event.keyCode===13)toggleOSI(' + l.num + ')">' +
+    '<span style="font-weight:800;font-size:1.1rem;color:' + l.color + '">L' + l.num + '</span>' +
+    '<span style="font-weight:700">' + l.name + '</span>' +
+    '<span style="font-size:0.8rem;color:var(--text-muted);flex:1">' + l.pdus + '</span>' +
+    '<span style="color:var(--text-muted);font-size:0.85rem">▼</span>' +
+    '</div>' +
+    '<div id="osi-body-' + l.num + '" style="display:none;padding:1rem;background:var(--bg1)">' +
+    '<p style="margin-bottom:0.5rem"><strong>Role:</strong> ' + l.role + '</p>' +
+    '<p style="margin-bottom:0.5rem"><strong>Protocols:</strong> ' + l.protocols + '</p>' +
+    '<p style="margin-bottom:0.5rem"><strong>Devices:</strong> ' + l.devices + '</p>' +
+    '<p style="margin-bottom:0.5rem"><strong>Attacks:</strong> <span style="color:#ef4444">' + l.attacks + '</span></p>' +
+    '<p><strong>Controls:</strong> <span style="color:#10b981">' + l.controls + '</span></p>' +
+    '</div></div>'
+  ).join('');
+}
+
+function toggleOSI(n) {
+  const body = document.getElementById('osi-body-' + n);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  const header = document.querySelector('[data-osil="' + n + '"]');
+  if (header) {
+    const arr = header.querySelector('span:last-child');
+    if (arr) arr.textContent = isOpen ? '▼' : '▲';
+  }
+}
+
+// ── NET MAP ────────────────────────────────────────────────
+const TOPO_INFO = {
+  attacker:    { title:'Threat Actor', color:'#ef4444', desc:'External attacker targeting internet-facing services via scanning, phishing, or CVE exploitation.' },
+  'remote-user':{ title:'Remote User (VPN/ZTNA)', color:'#10b981', desc:'Legitimate remote employee. Must pass MFA and device compliance check before accessing internal resources.' },
+  'perimeter-fw':{ title:'Perimeter NGFW (HA)', color:'#ef4444', desc:'Next-Gen Firewall with IPS, SSL inspection, and app-aware policy. Active/passive HA pair for resilience.' },
+  waf:         { title:'Web Application Firewall', color:'#ec4899', desc:'Filters HTTP/S for OWASP Top 10 attacks (SQLi, XSS, SSRF). Sits in front of web servers.' },
+  'web-srv':   { title:'Web Server (DMZ)', color:'#0ea5e9', desc:'Nginx/Apache/IIS in DMZ. Minimal outbound access, hardened OS, WAF in front.' },
+  'mail-srv':  { title:'Mail Relay (MTA)', color:'#10b981', desc:'Mail Transfer Agent in DMZ. Implements DMARC+SPF+DKIM. Relays to internal mail server via auth SMTP.' },
+  'dns-srv':   { title:'Authoritative DNS', color:'#f59e0b', desc:'Enable DNSSEC. Split-horizon DNS. Log all queries for threat detection via DNS telemetry.' },
+  ids:         { title:'IDS/IPS (Inline)', color:'#f97316', desc:'Suricata/Snort/Zeek inspects traffic for signatures and anomalies. IPS mode blocks; IDS mode alerts only.' },
+  'internal-fw':{ title:'Internal Firewall', color:'#ef4444', desc:'Enforces strict rules between DMZ and internal LAN. Only specific ports from specific DMZ hosts allowed.' },
+  'core-sw':   { title:'Core Switch (L3)', color:'#10b981', desc:'High-speed backbone (Cisco Nexus/Arista). Dual uplinks (LACP). OSPF area 0. No complex policy.' },
+  vlan10:      { title:'VLAN 10 — Users', color:'#0ea5e9', desc:'End-user workstations. 802.1X required. DHCP snooping and DAI enabled. Restricted to server VLANs.' },
+  vlan20:      { title:'VLAN 20 — Servers', color:'#7c3aed', desc:'Internal app and file servers. Strict ACLs. Management access via VLAN 99 only.' },
+  vlan30:      { title:'VLAN 30 — IoT/OT', color:'#10b981', desc:'IoT and OT devices. Isolated with no internet access. Very restricted inter-VLAN rules.' },
+};
+
+function topoInfo(id) {
+  const info = TOPO_INFO[id] || { title:id, desc:'Network component.', color:'#64748b' };
+  const panel = document.getElementById('netmap-info');
+  if (!panel) return;
+  panel.innerHTML = '<div style="border-left:3px solid ' + info.color + ';padding-left:0.75rem">' +
+    '<strong style="color:' + info.color + '">' + info.title + '</strong>' +
+    '<p style="margin-top:0.35rem;font-size:0.86rem;line-height:1.6">' + info.desc + '</p></div>';
+}
+
+function buildNetMap() {
+  document.querySelectorAll('.netmap-node').forEach(n => {
+    const id = n.getAttribute('data-node');
+    if (id) {
+      n.setAttribute('tabindex', '0');
+      n.addEventListener('click', () => topoInfo(id));
+      n.addEventListener('keydown', e => { if (e.keyCode === 13) topoInfo(id); });
+    }
+  });
+}
+
+// ── ATTACK GRID ────────────────────────────────────────────
+const ATTACK_SURFACE = [
+  { id:'phishing', title:'Phishing / Spear Phishing', cat:'Social Engineering', osi:7, severity:'critical',
+    desc:'Targeted email deception to steal credentials or deliver malware. Spear phishing tailors content to the victim.',
+    example:'CEO fraud email requesting urgent wire transfer, spoofing the CFO email address with real project context.',
+    defense:'DMARC+SPF+DKIM, Security awareness training, Anti-phishing gateway (ATP), MFA to prevent stolen cred use.' },
+  { id:'sqli', title:'SQL Injection', cat:'Web App', osi:7, severity:'critical',
+    desc:'Attacker injects SQL code into input fields to manipulate database queries, bypassing auth or extracting data.',
+    example:"Login form: ' OR '1'='1 -- authenticates without valid credentials.",
+    defense:'Parameterised queries/prepared statements, Input validation, WAF, Least-privilege DB accounts.' },
+  { id:'xss', title:'Cross-Site Scripting (XSS)', cat:'Web App', osi:7, severity:'high',
+    desc:'Malicious JavaScript injected into web pages executed in victims browsers, stealing cookies or acting as the user.',
+    example:'Stored XSS in comment field executes JavaScript to exfiltrate cookies to attacker domain.',
+    defense:'Output encoding, Content Security Policy (CSP), HttpOnly+Secure+SameSite cookie flags, Input sanitisation.' },
+  { id:'mitm', title:'Man-in-the-Middle (MitM)', cat:'Network', osi:'2-7', severity:'high',
+    desc:'Attacker intercepts and potentially modifies communication between two parties without their knowledge.',
+    example:'ARP spoofing on LAN redirects traffic through attacker. SSL stripping downgrades HTTPS to HTTP.',
+    defense:'TLS everywhere + HSTS, Certificate pinning, 802.1X, Dynamic ARP Inspection (DAI), VPN for untrusted networks.' },
+  { id:'ransomware', title:'Ransomware', cat:'Malware', osi:'n/a', severity:'critical',
+    desc:'Malware encrypts victim files and demands ransom. Often deployed via phishing or exposed RDP.',
+    example:'WannaCry (2017): exploited EternalBlue (MS17-010) SMBv1. Encrypted 230,000+ systems in 150 countries.',
+    defense:'Patch SMBv1/RDP, Immutable offsite backups (3-2-1), EDR, Network segmentation to limit lateral movement.' },
+  { id:'ddos', title:'DDoS Attack', cat:'Network', osi:'3-7', severity:'high',
+    desc:'Distributed flood overwhelming a service, making it unavailable to legitimate users.',
+    example:'Mirai botnet (2016): 600,000 IoT devices generated 1.2 Tbps against Dyn DNS, taking down major websites.',
+    defense:'CDN/scrubbing (Cloudflare, AWS Shield), Rate limiting, BGP blackhole, SYN cookies, Traffic shaping.' },
+  { id:'arp-spoof', title:'ARP Spoofing / Poisoning', cat:'Network', osi:2, severity:'high',
+    desc:'Attacker sends gratuitous ARP replies to associate their MAC with the gateway IP, redirecting all traffic.',
+    example:'Attacker broadcasts: 192.168.1.1 is at AA:BB:CC:DD:EE:FF — victims send all traffic to attacker.',
+    defense:'Dynamic ARP Inspection (DAI), Static ARP entries for gateways, 802.1X, Private VLANs, Network monitoring.' },
+  { id:'cred-stuff', title:'Credential Stuffing', cat:'Authentication', osi:7, severity:'high',
+    desc:'Using username/password pairs from prior breaches to attempt logins on other services (password reuse).',
+    example:'Breach database + automated tool testing credentials against online banking portal.',
+    defense:'MFA (renders stolen creds useless), Rate limiting + CAPTCHA, Impossible travel detection, HIBP API check.' },
+  { id:'supply-chain', title:'Supply Chain Attack', cat:'Advanced', osi:'n/a', severity:'critical',
+    desc:'Compromising software or hardware in the supply chain to distribute malware via trusted update mechanisms.',
+    example:'SolarWinds SUNBURST (2020): malicious DLL in Orion updates reached 18,000+ orgs including US government.',
+    defense:'SBOM (Software Bill of Materials), Code signing, Vendor risk management, Network segmentation, Zero Trust.' },
+];
+
+function buildAttackGrid() {
+  const el = document.getElementById('attack-surface-cards');
+  if (!el || el.dataset.built) return;
+  el.dataset.built = '1';
+  el.innerHTML = ATTACK_SURFACE.map(a =>
+    '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:0.5rem">' +
+    '<div style="padding:0.75rem 1rem;cursor:pointer;display:flex;align-items:center;gap:0.5rem" ' +
+    'data-id="' + a.id + '" onclick="toggleAttack(\'' + a.id + '\')" tabindex="0" onkeydown="if(event.keyCode===13)toggleAttack(\'' + a.id + '\')">' +
+    '<span style="font-size:0.7rem;padding:0.1rem 0.4rem;border-radius:4px;background:' + (a.severity==='critical'?'#7f1d1d':a.severity==='high'?'#431407':'#1e3a5f') + ';color:' + (a.severity==='critical'?'#fca5a5':a.severity==='high'?'#fdba74':'#93c5fd') + '">' + a.severity.toUpperCase() + '</span>' +
+    '<strong>' + a.title + '</strong>' +
+    '<span style="font-size:0.75rem;color:var(--text-muted);margin-left:auto">' + a.cat + ' · L' + a.osi + '</span>' +
+    '</div>' +
+    '<div id="attack-body-' + a.id + '" style="display:none;padding:0 1rem 0.75rem">' +
+    '<p style="font-size:0.88rem;margin-bottom:0.5rem">' + a.desc + '</p>' +
+    '<p style="font-size:0.82rem;color:var(--accent);margin-bottom:0.5rem"><strong>Example:</strong> ' + a.example + '</p>' +
+    '<p style="font-size:0.82rem;color:#10b981"><strong>Defence:</strong> ' + a.defense + '</p>' +
+    '</div></div>'
+  ).join('');
+}
+
+function toggleAttack(id) {
+  const body = document.getElementById('attack-body-' + id);
+  if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── CRYPTO FLOW (TLS TIMELINE) ─────────────────────────────
+function buildCryptoFlow() {
+  const el = document.getElementById('tls-timeline');
+  if (!el || el.dataset.built) return;
+  el.dataset.built = '1';
+  el.innerHTML = TLS_STEPS.map(s => {
+    const isClient = s.actor === 'Client\u2192Server';
+    const color = isClient ? '#0ea5e9' : '#10b981';
+    return '<div style="display:flex;gap:1rem;margin-bottom:0.75rem">' +
+      '<div style="width:3rem;text-align:center;flex-shrink:0">' +
+      '<div style="width:2rem;height:2rem;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;margin:0 auto;font-weight:700;color:#000">' + s.step + '</div>' +
+      '</div>' +
+      '<div style="flex:1;background:var(--bg2);border-radius:8px;padding:0.75rem;cursor:pointer" ' +
+      'data-cfn="' + s.step + '" onclick="toggleCF(' + s.step + ')" tabindex="0" onkeydown="if(event.keyCode===13)toggleCF(' + s.step + ')">' +
+      '<div style="display:flex;align-items:center;gap:0.5rem">' +
+      '<span style="color:' + color + ';font-size:0.75rem">' + s.actor + '</span>' +
+      '<strong>' + s.msg + '</strong></div>' +
+      '<div id="cf-body-' + s.step + '" style="display:none;margin-top:0.5rem">' +
+      '<p style="font-size:0.85rem;margin-bottom:0.35rem">' + s.detail + '</p>' +
+      '<p style="font-size:0.82rem;color:#f59e0b"><strong>Security:</strong> ' + s.security + '</p>' +
+      '</div></div></div>';
+  }).join('');
+}
+
+function toggleCF(n) {
+  const body = document.getElementById('cf-body-' + n);
+  if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── DEFENSE LAYERS ─────────────────────────────────────────
+function buildDefenseLayers() {
+  const el = document.getElementById('defense-rings');
+  if (!el || el.dataset.built) return;
+  el.dataset.built = '1';
+  el.innerHTML = DEFENCE_LAYERS.map(l => {
+    const safeId = l.layer.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+    return '<div style="border-left:4px solid ' + l.color + ';margin-bottom:0.5rem;border-radius:6px;overflow:hidden">' +
+      '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1rem;background:var(--bg2);cursor:pointer" ' +
+      'data-layer="' + l.layer + '" onclick="toggleDefense(\'' + l.layer + '\')" tabindex="0" onkeydown="if(event.keyCode===13)toggleDefense(\'' + l.layer + '\')">' +
+      '<span style="font-size:1.2rem">' + l.icon + '</span>' +
+      '<strong style="color:' + l.color + '">' + l.layer + '</strong>' +
+      '<span style="color:var(--text-muted)">▼</span>' +
+      '</div>' +
+      '<div id="defense-body-' + safeId + '" style="display:none;padding:0.75rem 1rem;background:var(--bg1)">' +
+      '<ul style="margin:0;padding-left:1.25rem;font-size:0.85rem;line-height:1.8">' +
+      l.controls.map(c => '<li>' + c + '</li>').join('') +
+      '</ul>' +
+      '<p style="margin-top:0.5rem;font-size:0.8rem;color:#ef4444"><strong>Threats:</strong> ' + l.threats + '</p>' +
+      '</div></div>';
+  }).join('');
+}
+
+function toggleDefense(layer) {
+  const safeId = layer.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+  const body = document.getElementById('defense-body-' + safeId);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  const arr = document.querySelector('[data-layer="' + layer + '"] span:last-child');
+  if (arr) arr.textContent = isOpen ? '▼' : '▲';
+}
+
+// ── STRIDE GRID ────────────────────────────────────────────
+function buildSTRIDEGrid() {
+  const el = document.getElementById('stride-cards');
+  if (!el || el.dataset.built) return;
+  el.dataset.built = '1';
+  const colors = { S:'#ef4444', T:'#f97316', R:'#f59e0b', I:'#3b82f6', D:'#8b5cf6', E:'#10b981' };
+  el.innerHTML = STRIDE.map(s =>
+    '<div style="background:var(--bg2);border-top:3px solid ' + (colors[s.letter] || '#64748b') + ';border-radius:8px;overflow:hidden">' +
+    '<div style="padding:0.75rem 1rem;cursor:pointer" ' +
+    'data-letter="' + s.letter + '" onclick="showSTRIDE(\'' + s.letter + '\')" tabindex="0" onkeydown="if(event.keyCode===13)showSTRIDE(\'' + s.letter + '\')">' +
+    '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">' +
+    '<span style="font-size:1.5rem;font-weight:900;color:' + (colors[s.letter] || '#64748b') + '">' + s.letter + '</span>' +
+    '<div><strong>' + s.threat + '</strong><div style="font-size:0.75rem;color:var(--text-muted)">Breaks: ' + s.property + '</div></div>' +
+    '</div>' +
+    '<p style="font-size:0.82rem;color:var(--text-muted)">' + s.desc + '</p>' +
+    '</div>' +
+    '<div id="stride-body-' + s.letter + '" style="display:none;padding:0 1rem 0.75rem">' +
+    '<strong style="font-size:0.82rem">Examples:</strong><ul style="padding-left:1.25rem;margin:0.25rem 0;font-size:0.82rem;line-height:1.8">' +
+    s.examples.map(e => '<li>' + e + '</li>').join('') + '</ul>' +
+    '<strong style="font-size:0.82rem">Controls:</strong><ul style="padding-left:1.25rem;margin:0.25rem 0;font-size:0.82rem;line-height:1.8">' +
+    s.controls.map(c => '<li style="color:#10b981">' + c + '</li>').join('') + '</ul>' +
+    '</div></div>'
+  ).join('');
+}
+
+function showSTRIDE(letter) {
+  const body = document.getElementById('stride-body-' + letter);
+  if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── OSI vs TCP/IP COMPARE TABLE ────────────────────────────
+const OSI_TCP_MAP = [
+  { osi:7, osiName:'Application',  tcpLayer:4, tcpName:'Application',   protocols:'HTTP, HTTPS, DNS, FTP, SMTP, IMAP, SSH, SNMP, DHCP', detail:'OSI L5 (Session), L6 (Presentation), and L7 (Application) all collapse into the TCP/IP Application layer. TLS encryption (OSI L6) is handled by application-layer protocols in TCP/IP.' },
+  { osi:6, osiName:'Presentation', tcpLayer:4, tcpName:'Application',   protocols:'TLS/SSL, MIME, ASCII, JPEG', detail:'Encoding, encryption, and compression are handled by application-layer protocols (TLS) in TCP/IP. No separate Presentation layer exists.' },
+  { osi:5, osiName:'Session',      tcpLayer:4, tcpName:'Application',   protocols:'NetBIOS, RPC, SIP sessions', detail:'Session management is embedded in application protocols (HTTP sessions, TLS resumption, TCP keep-alives) in TCP/IP.' },
+  { osi:4, osiName:'Transport',    tcpLayer:3, tcpName:'Transport',      protocols:'TCP, UDP, SCTP, QUIC', detail:'Direct 1:1 mapping. Responsible for end-to-end communication, port multiplexing, and flow control. TCP vs UDP trade-off.' },
+  { osi:3, osiName:'Network',      tcpLayer:2, tcpName:'Internet',       protocols:'IPv4, IPv6, ICMP, ARP, IPsec', detail:'IP routing and addressing. TCP/IP calls this the Internet layer — designed specifically around the IP protocol.' },
+  { osi:2, osiName:'Data Link',    tcpLayer:1, tcpName:'Network Access', protocols:'Ethernet, Wi-Fi, ARP, PPP, 802.1Q', detail:'OSI L1 (Physical) and L2 (Data Link) combine into the TCP/IP Network Access layer. Handles physical medium and frame delivery.' },
+  { osi:1, osiName:'Physical',     tcpLayer:1, tcpName:'Network Access', protocols:'Ethernet PHY, Wi-Fi RF, Fibre, USB', detail:'Physical signal transmission. TCP/IP does not specify physical standards — inherits from Ethernet/IEEE 802 specifications.' },
+];
+
+function buildCompareTable() {
+  const body = document.getElementById('osi-tcp-body');
+  if (!body || body.dataset.built) return;
+  body.dataset.built = '1';
+  const colors = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#95a5a6'];
+  body.innerHTML = OSI_TCP_MAP.map((row, i) =>
+    '<tr style="cursor:pointer" onclick="showCompareDetail(' + i + ')" tabindex="0" onkeydown="if(event.keyCode===13)showCompareDetail(' + i + ')">' +
+    '<td style="color:' + colors[7-row.osi] + ';font-weight:700">L' + row.osi + '</td>' +
+    '<td style="color:' + colors[7-row.osi] + '">' + row.osiName + '</td>' +
+    '<td style="color:var(--text-muted)">' + row.tcpLayer + '</td>' +
+    '<td>' + row.tcpName + '</td>' +
+    '<td style="font-size:0.78rem;color:var(--text-muted)">' + row.protocols + '</td>' +
+    '</tr>'
+  ).join('');
+}
+
+function showCompareDetail(i) {
+  const row = OSI_TCP_MAP[i];
+  const panel = document.getElementById('osi-tcp-detail');
+  if (!panel || !row) return;
+  panel.innerHTML = '<div style="padding:0.75rem;background:var(--bg2);border-radius:8px;border:1px solid var(--border);margin-top:0.75rem">' +
+    '<strong>OSI L' + row.osi + ' (' + row.osiName + ') → TCP/IP L' + row.tcpLayer + ' (' + row.tcpName + ')</strong>' +
+    '<p style="font-size:0.86rem;margin-top:0.35rem;line-height:1.6">' + row.detail + '</p></div>';
+}
+
+// ── PORTS TABLE ────────────────────────────────────────────
+const DANGEROUS_PORTS = [21,23,69,135,137,138,139,445,1723,4444,5900];
+const SECURE_PORTS    = [22,443,636,853,993,995,587,6514,51820];
+
+function buildPortsTable() {
+  const body = document.getElementById('port-table-body');
+  if (!body || body.dataset.built) return;
+  body.dataset.built = '1';
+  renderPortRows(PORTS);
+}
+
+function renderPortRows(ports) {
+  const body = document.getElementById('port-table-body');
+  if (!body) return;
+  body.innerHTML = ports.map(p => {
+    const isDanger = DANGEROUS_PORTS.includes(p.port);
+    const isSecure = SECURE_PORTS.includes(p.port);
+    const risk = isDanger ? '<span style="color:#ef4444">⚠ Dangerous</span>'
+                : isSecure ? '<span style="color:#10b981">✓ Secure</span>'
+                : '<span style="color:var(--text-muted)">Neutral</span>';
+    return '<tr><td style="font-weight:700;color:var(--accent)">' + p.port + '</td>' +
+      '<td>' + p.proto + '</td>' +
+      '<td>' + p.service + '</td>' +
+      '<td style="font-size:0.82rem">' + p.notes + '</td>' +
+      '<td>' + risk + '</td></tr>';
+  }).join('');
+}
+
+function setPortFilter(type) {
+  document.querySelectorAll('.port-filter-btn').forEach(b => {
+    b.classList.toggle('active', (b.getAttribute('onclick') || '').includes("'" + type + "'"));
+  });
+  let filtered = PORTS;
+  if (type === 'tcp') filtered = PORTS.filter(p => p.proto.includes('TCP'));
+  else if (type === 'udp') filtered = PORTS.filter(p => p.proto.includes('UDP'));
+  else if (type === 'dangerous') filtered = PORTS.filter(p => DANGEROUS_PORTS.includes(p.port));
+  else if (type === 'safe') filtered = PORTS.filter(p => SECURE_PORTS.includes(p.port));
+  renderPortRows(filtered);
+}
+
+// ── ROUTING PROTOCOLS ──────────────────────────────────────
+function buildRoutingSchema(view) {
+  routingView = view;
+  const cardsEl = document.getElementById('routing-cards-view');
+  const dtreeEl = document.getElementById('routing-dtree-view');
+  const osiEl   = document.getElementById('routing-osi-view');
+  if (cardsEl) cardsEl.style.display = view === 'cards' ? '' : 'none';
+  if (dtreeEl) dtreeEl.style.display = view === 'dtree'  ? '' : 'none';
+  if (osiEl)   osiEl.style.display   = view === 'osi'    ? '' : 'none';
+  if (view === 'cards' && cardsEl) buildRoutingCompare(cardsEl);
+  if (view === 'dtree' && dtreeEl) buildRoutingDecision(dtreeEl);
+  if (view === 'osi'   && osiEl)   buildRoutingLayers(osiEl);
+}
+
+function setRoutingView(view) {
+  routingView = view;
+  document.querySelectorAll('#routing-view-toggle .view-btn').forEach(b => {
+    b.classList.toggle('active', (b.getAttribute('onclick') || '').includes("'" + view + "'"));
+  });
+  buildRoutingSchema(view);
+}
+
+function buildRoutingCompare(el) {
+  if (!el || el.dataset.built) return;
+  el.dataset.built = '1';
+  el.innerHTML = ROUTING.map((r, i) =>
+    '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:0.5rem">' +
+    '<div style="padding:0.75rem 1rem;cursor:pointer;display:flex;align-items:center;gap:0.75rem" ' +
+    'data-id="' + i + '" onclick="showRoutingDetail(' + i + ')" tabindex="0" onkeydown="if(event.keyCode===13)showRoutingDetail(' + i + ')">' +
+    '<strong>' + r.name + '</strong>' +
+    '<span style="font-size:0.75rem;color:var(--text-muted)">' + r.type + '</span>' +
+    '<span style="margin-left:auto;font-size:0.8rem;color:var(--accent)">AD ' + r.ad + '</span>' +
+    '</div>' +
+    '<div id="routing-detail-' + i + '" style="display:none;padding:0 1rem 0.75rem">' +
+    '<table style="font-size:0.82rem;border-collapse:collapse;width:100%">' +
+    ['Algorithm','Metric','Convergence','Scalability','Auth'].map((k,j) => {
+      const vals = [r.algo, r.metric, r.convergence, r.scalability, r.auth];
+      return '<tr><td style="color:var(--text-muted);padding:0.2rem 0.5rem 0.2rem 0;white-space:nowrap">' + k + '</td><td>' + vals[j] + '</td></tr>';
+    }).join('') +
+    '</table>' +
+    '<div style="margin-top:0.5rem;font-size:0.82rem"><span style="color:#10b981"><strong>Pros:</strong></span> ' + r.pros.join(' · ') + '</div>' +
+    '<div style="margin-top:0.25rem;font-size:0.82rem"><span style="color:#ef4444"><strong>Cons:</strong></span> ' + r.cons.join(' · ') + '</div>' +
+    '</div></div>'
+  ).join('');
+}
+
+function showRoutingDetail(i) {
+  const el = document.getElementById('routing-detail-' + i);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+const DTREE = [
+  { q:'Is this for the public internet (inter-AS routing)?', yes:{ proto:'BGP v4', reason:'BGP is the only EGP suitable for internet routing. Manages AS path policies and the full 900K+ route table.' }, no:1 },
+  { q:'Is the network large (many routers, multiple areas/sites)?', yes:2, no:3 },
+  { q:'Is the infrastructure predominantly Cisco equipment?', yes:{ proto:'EIGRP or OSPF', reason:'EIGRP offers fast convergence on Cisco gear; OSPF is open-standard and equally scalable for large enterprise.' }, no:{ proto:'OSPF v2/v3', reason:'OSPF is the open-standard IGP for large multi-vendor networks with hierarchical area design.' } },
+  { q:'Do you need simplicity over features (small flat network)?', yes:4, no:{ proto:'OSPF', reason:'OSPF provides better scalability and faster convergence than RIP for growing networks.' } },
+  { q:'Is the hop count always 15 or fewer and the network very small?', yes:{ proto:'RIPv2', reason:'RIPv2 is simple to configure and sufficient for tiny networks with no hop count concerns.' }, no:{ proto:'Static Routes', reason:'For very small stub networks, static routes provide predictability with zero protocol overhead.' } },
+];
+
+function buildRoutingDecision(el) {
+  if (!el || el.dataset.built) return;
+  el.dataset.built = '1';
+  renderDecisionStep(0, el);
+}
+
+function renderDecisionStep(idx, containerEl) {
+  const el = containerEl || document.getElementById('routing-dtree-view');
+  if (!el) return;
+  const step = DTREE[idx];
+  if (!step) return;
+  el.innerHTML = '<div style="max-width:600px">' +
+    '<p style="font-size:0.95rem;font-weight:600;margin-bottom:1rem">' + step.q + '</p>' +
+    '<div style="display:flex;gap:0.75rem;flex-wrap:wrap">' +
+    '<button class="view-btn active" onclick="dtreeAnswer(' + idx + ',true)" tabindex="0">Yes</button>' +
+    '<button class="view-btn" onclick="dtreeAnswer(' + idx + ',false)" tabindex="0">No</button>' +
+    '</div>' +
+    (dtreeState.history.length > 0
+      ? '<button style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);background:none;border:none;cursor:pointer" onclick="resetDecisionTree()">↩ Start over</button>'
+      : '') +
+    '</div>';
+}
+
+function dtreeAnswer(idx, yes) {
+  const step = DTREE[idx];
+  if (!step) return;
+  const result = yes ? step.yes : step.no;
+  dtreeState.history.push(idx);
+  const el = document.getElementById('routing-dtree-view');
+  if (!el) return;
+  if (typeof result === 'object' && result.proto) {
+    el.innerHTML = '<div style="max-width:600px;text-align:center;padding:2rem">' +
+      '<div style="font-size:1.5rem;font-weight:700;color:var(--accent);margin-bottom:0.75rem">' + result.proto + '</div>' +
+      '<p style="font-size:0.9rem;line-height:1.6;margin-bottom:1.5rem">' + result.reason + '</p>' +
+      '<button class="view-btn active" onclick="resetDecisionTree()" tabindex="0">↩ Start over</button></div>';
+  } else {
+    renderDecisionStep(result, el);
+  }
+}
+
+function resetDecisionTree() {
+  dtreeState = { step:0, history:[] };
+  const el = document.getElementById('routing-dtree-view');
+  if (el) renderDecisionStep(0, el);
+}
+
+function buildRoutingLayers(el) {
+  if (!el || el.dataset.built) return;
+  el.dataset.built = '1';
+  const entries = [
+    { name:'BGP v4',       color:'#3498db', label:'L3 Network — Internet routing (eBGP between autonomous systems)' },
+    { name:'OSPF v2/v3',   color:'#2ecc71', label:'L3 Network — IGP within an autonomous system (enterprise/ISP)' },
+    { name:'EIGRP',        color:'#f39c12', label:'L3 Network — IGP within an AS (Cisco-preferred, open since 2016)' },
+    { name:'RIP v2',       color:'#e74c3c', label:'L3 Network — IGP for small networks (max 15 hops)' },
+    { name:'IS-IS',        color:'#9b59b6', label:'L2/L3 — Runs directly over L2 (ISO); preferred by ISP/carriers' },
+    { name:'Static Route', color:'#95a5a6', label:'L3 Network — Manual entry, no protocol, deterministic' },
+  ];
+  el.innerHTML = entries.map(e =>
+    '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 1rem;background:var(--bg2);border-left:4px solid ' + e.color + ';border-radius:6px;margin-bottom:0.4rem">' +
+    '<strong style="color:' + e.color + ';min-width:100px">' + e.name + '</strong>' +
+    '<span style="font-size:0.85rem;color:var(--text-muted)">' + e.label + '</span>' +
+    '</div>'
+  ).join('');
+}
+
+// ── NETWORK ARCHITECTURE ───────────────────────────────────
+function buildNetarchSchema(view) {
+  archView = view;
+  const container = document.getElementById('pane-net-arch');
+  if (!container) return;
+  container.querySelectorAll('.arch-view').forEach(v => v.classList.remove('active'));
+  const active = document.getElementById('arch-' + view);
+  if (active) active.classList.add('active');
+  if (view === 'enterprise') {
+    const el = document.getElementById('arch-enterprise-tiers');
+    if (el && !el.dataset.built) renderEnterpriseTiers(el);
+  } else if (view === 'cloud') {
+    const el = document.getElementById('arch-cloud-content');
+    if (el && !el.dataset.built) renderCloudHybrid(el);
+  } else if (view === 'dmz') {
+    const el = document.getElementById('arch-dmz-content');
+    if (el && !el.dataset.built) renderDMZDetail(el);
+  } else if (view === 'zerotrust') {
+    const el = document.getElementById('arch-zerotrust-content');
+    if (el && !el.dataset.built) renderZeroTrust(el);
+  }
+}
+
+function setArchView(view) {
+  archView = view;
+  const container = document.getElementById('pane-net-arch');
+  if (!container) return;
+  container.querySelectorAll('#arch-view-toggle .view-btn').forEach(b => {
+    b.classList.toggle('active', (b.getAttribute('onclick') || '').includes("'" + view + "'"));
+  });
+  buildNetarchSchema(view);
+}
+
+const ENTERPRISE_TIERS = [
+  { id:'internet',      label:'Internet / WAN / Cloud',   color:'#64748b', icon:'🌐', desc:'External networks, cloud providers, SD-WAN connections. ISP redundancy with BGP failover.', devices:'ISP routers, BGP edge, SD-WAN hubs', protocols:'BGP, MPLS, SD-WAN' },
+  { id:'perimeter',     label:'Perimeter / Edge Security', color:'#ef4444', icon:'🛡️',  desc:'First line of defence. NGFW + IPS, DDoS scrubbing, VPN/ZTNA termination, web proxy. HA pair.', devices:'NGFW (Palo Alto/Fortinet), DDoS scrubber, VPN concentrator, Load balancer', protocols:'BGP, IPsec, TLS, OSPF stub' },
+  { id:'dmz',           label:'DMZ (Demilitarised Zone)',  color:'#f97316', icon:'⚠️',  desc:'Semi-trusted zone for internet-facing services. Isolated from internal LAN. Only specific ports allowed in both directions.', devices:'Web servers, Mail relay (MTA), DNS (auth), Reverse proxy, WAF', protocols:'HTTP/S, SMTP, DNS, NTP' },
+  { id:'core',          label:'Core Layer',                color:'#3b82f6', icon:'⚡',  desc:'High-speed L3 backbone. Aggregates distribution traffic. No complex policy — speed is priority. Dual switches in VSS/vPC. OSPF area 0.', devices:'Core switches (Cisco Nexus, Arista 7000)', protocols:'OSPF area 0, LACP, VRRP/HSRP' },
+  { id:'distribution',  label:'Distribution Layer',        color:'#8b5cf6', icon:'🔀',  desc:'Policy enforcement, inter-VLAN routing, QoS, and redundancy. SVI for VLAN routing. Connects access to core.', devices:'L3 distribution switches', protocols:'OSPF, STP, HSRP/VRRP, 802.1Q' },
+  { id:'access',        label:'Access Layer',              color:'#10b981', icon:'🖥️',  desc:'End devices connect here. 802.1X, DHCP snooping, Dynamic ARP Inspection, port security. Trunk uplinks to distribution.', devices:'Access switches (PoE), APs, IP phones', protocols:'802.1X, DHCP, STP, CDP/LLDP, PoE' },
+  { id:'endpoints',     label:'Endpoints & IoT',           color:'#22c55e', icon:'📱',  desc:'User workstations, mobiles, servers, IoT/OT. Each category in its own VLAN with appropriate ACLs.', devices:'PCs (MDM), Smartphones (MAM), IoT sensors, SCADA/ICS', protocols:'Varies by device' },
+];
+
+function renderEnterpriseTiers(el) {
+  el.dataset.built = '1';
+  el.innerHTML = ENTERPRISE_TIERS.map(tier =>
+    '<div style="border:1px solid ' + tier.color + '44;border-left:4px solid ' + tier.color + ';border-radius:8px;margin-bottom:0.5rem;overflow:hidden">' +
+    '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1rem;background:var(--bg2);cursor:pointer" ' +
+    'data-tid="' + tier.id + '" onclick="selectTier(\'' + tier.id + '\')" tabindex="0" onkeydown="if(event.keyCode===13)selectTier(\'' + tier.id + '\')">' +
+    '<span style="font-size:1.2rem">' + tier.icon + '</span>' +
+    '<strong style="color:' + tier.color + '">' + tier.label + '</strong>' +
+    '<span style="margin-left:auto;color:var(--text-muted)">▼</span>' +
+    '</div>' +
+    '<div id="tier-body-' + tier.id + '" style="display:none;padding:0.75rem 1rem;background:var(--bg1)">' +
+    '<p style="font-size:0.86rem;margin-bottom:0.5rem;line-height:1.6">' + tier.desc + '</p>' +
+    '<p style="font-size:0.82rem;color:var(--text-muted)"><strong>Devices:</strong> ' + tier.devices + '</p>' +
+    '<p style="font-size:0.82rem;color:var(--accent)"><strong>Protocols:</strong> ' + tier.protocols + '</p>' +
+    '</div></div>'
+  ).join('');
+}
+
+function selectTier(id) {
+  const body = document.getElementById('tier-body-' + id);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  const arr = document.querySelector('[data-tid="' + id + '"] span:last-child');
+  if (arr) arr.textContent = isOpen ? '▼' : '▲';
+}
+
+function renderCloudHybrid(el) {
+  el.dataset.built = '1';
+  const d = ARCH_DIAGRAMS.find(x => x.id === 'three-tier');
+  el.innerHTML = '<pre style="font-size:0.78rem;line-height:1.5;overflow-x:auto;padding:1rem;background:var(--bg1);border-radius:8px;border:1px solid var(--border)">' +
+    (d ? d.diagram.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '') + '</pre>' +
+    '<div style="margin-top:0.75rem"><ul style="font-size:0.82rem;line-height:1.8;padding-left:1.25rem;margin:0">' +
+    (d ? d.notes.map(n => '<li>' + n + '</li>').join('') : '') + '</ul></div>';
+}
+
+function renderDMZDetail(el) {
+  el.dataset.built = '1';
+  el.innerHTML = '<pre style="font-size:0.78rem;overflow-x:auto;padding:1rem;background:var(--bg1);border-radius:8px;border:1px solid var(--border);white-space:pre-wrap">' +
+    'VLAN DESIGN:\n' +
+    '  VLAN 10: DMZ         (Web, Mail, DNS)       zone: dmz\n' +
+    '  VLAN 20: Users       (Workstations)         zone: internal\n' +
+    '  VLAN 30: Servers     (App, File, DB)        zone: servers\n' +
+    '  VLAN 40: Management  (Admin hosts only)     zone: mgmt\n' +
+    '  VLAN 50: IoT / OT   (Isolated)             zone: iot\n' +
+    '\n' +
+    'FIREWALL ZONE POLICY (allow matrix):\n' +
+    '  internet  → dmz      : TCP 80, 443, 25 (to specific IPs only)\n' +
+    '  internet  → internal : DENY ALL\n' +
+    '  dmz       → servers  : TCP 1433, 5432 (app → DB specific ports)\n' +
+    '  dmz       → internet : DENY ALL (no outbound from DMZ)\n' +
+    '  internal  → servers  : TCP 443, 445, 3389 (controlled access)\n' +
+    '  *         → mgmt     : SSH 22, HTTPS 443 from mgmt hosts only\n' +
+    '  iot       → *        : DENY ALL outbound (isolated)\n' +
+    '</pre>';
+}
+
+function renderZeroTrust(el) {
+  el.dataset.built = '1';
+  const d = ARCH_DIAGRAMS.find(x => x.id === 'zero-trust');
+  el.innerHTML = '<pre style="font-size:0.78rem;line-height:1.5;overflow-x:auto;padding:1rem;background:var(--bg1);border-radius:8px;border:1px solid var(--border)">' +
+    (d ? d.diagram.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '') + '</pre>' +
+    '<div id="zt-principles" style="margin-top:0.75rem">' +
+    [
+      { n:1, title:'Verify Explicitly', desc:'Authenticate and authorise every request using all available data: identity, location, device health, service, data classification, and anomalies.' },
+      { n:2, title:'Use Least Privilege Access', desc:'Limit user access with just-in-time (JIT) and just-enough-access (JEA). Risk-based adaptive policies. Protect data rather than just the perimeter.' },
+      { n:3, title:'Assume Breach', desc:'Minimise blast radius. Segment access. Encrypt all sessions end-to-end. Use analytics to detect and respond to threats. Never assume you are breach-free.' },
+    ].map(p =>
+      '<div style="display:flex;gap:0.75rem;margin-bottom:0.5rem;padding:0.6rem;background:var(--bg2);border-radius:6px;cursor:pointer" ' +
+      'data-ztn="' + p.n + '" onclick="toggleZT(' + p.n + ')" tabindex="0" onkeydown="if(event.keyCode===13)toggleZT(' + p.n + ')">' +
+      '<span style="font-weight:800;color:var(--accent);font-size:1.1rem">' + p.n + '</span>' +
+      '<div><strong>' + p.title + '</strong>' +
+      '<div id="zt-body-' + p.n + '" style="display:none;font-size:0.85rem;color:var(--text-muted);margin-top:0.25rem;line-height:1.6">' + p.desc + '</div>' +
+      '</div></div>'
+    ).join('') + '</div>';
+}
+
+function toggleZT(n) {
+  const body = document.getElementById('zt-body-' + n);
+  if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+// ============================================================
+// CLI FUNCTIONS
+// ============================================================
+function renderCLI() {
+  const isWorkflow = cliOsFilter === 'workflows';
+  const cmdPane = document.getElementById('pane-cli-commands');
+  const wfPane  = document.getElementById('pane-cli-workflows');
+  if (isWorkflow) {
+    if (cmdPane) cmdPane.classList.remove('active');
+    if (wfPane)  wfPane.classList.add('active');
+    renderWorkflowList('all');
+    return;
+  }
+  if (cmdPane) cmdPane.classList.add('active');
+  if (wfPane)  wfPane.classList.remove('active');
+  const el = document.getElementById('cli-cards');
+  if (!el) return;
+  const data = cliOsFilter === 'all' ? CLI_DATA : CLI_DATA.filter(c => c.os.includes(cliOsFilter));
+  el.innerHTML = data.map(c =>
+    '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:0.5rem">' +
+    '<div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem 1rem;cursor:pointer" ' +
+    'onclick="toggleCmd(\'' + c.id + '\')" tabindex="0" onkeydown="if(event.keyCode===13)toggleCmd(\'' + c.id + '\')">' +
+    '<div style="flex:1">' +
+    '<div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.25rem">' +
+    c.os.map(o => '<span style="font-size:0.68rem;padding:0.1rem 0.4rem;border-radius:3px;background:var(--bg4);color:var(--text-muted)">' + o + '</span>').join('') +
+    '<span style="font-size:0.68rem;padding:0.1rem 0.4rem;border-radius:3px;background:var(--bg4);color:var(--accent)">' + c.cat + '</span>' +
+    '</div>' +
+    '<code style="font-size:0.85rem;font-family:monospace;color:var(--accent)">' + c.cmd + '</code>' +
+    '<p style="font-size:0.8rem;color:var(--text-muted);margin:0.2rem 0 0">' + c.desc + '</p>' +
+    '</div>' +
+    '<button style="flex-shrink:0;padding:0.3rem 0.6rem;font-size:0.75rem;border-radius:5px;border:1px solid var(--border);background:var(--bg3);color:var(--text-muted);cursor:pointer" ' +
+    'onclick="event.stopPropagation();copyCLI(event,\'' + c.id + '\')" tabindex="0" title="Copy command">Copy</button>' +
+    '</div>' +
+    '<div id="cmd-body-' + c.id + '" style="display:none;padding:0 1rem 0.75rem;font-size:0.82rem;border-top:1px solid var(--border)">' +
+    '<p style="margin-top:0.5rem;color:var(--text-muted);line-height:1.6"><strong>Notes:</strong> ' + c.notes + '</p>' +
+    '</div></div>'
+  ).join('');
+}
+
+function setCliFilter(os) {
+  cliOsFilter = os;
+  document.querySelectorAll('.cli-filter-btn').forEach(b => {
+    b.classList.toggle('active', (b.getAttribute('onclick') || '').includes("'" + os + "'"));
+  });
+  renderCLI();
+}
+
+function cliFilter(os, btn) { setCliFilter(os); }
+
+function switchCLIView(view, btn) { setCliFilter(view); }
+
+function toggleCmd(id) {
+  const body = document.getElementById('cmd-body-' + id);
+  if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+function copyCLI(evt, id) {
+  const cmd = (CLI_DATA.find(c => c.id === id) || {}).cmd || '';
+  if (!cmd) return;
+  const btn = evt.currentTarget || evt.target;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(cmd).then(() => flashCopy(btn)).catch(() => fallbackCopy(cmd, btn));
+  } else {
+    fallbackCopy(cmd, btn);
+  }
+}
+
+function fallbackCopy(text, btn) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  flashCopy(btn);
+}
+
+function flashCopy(btn) {
+  if (!btn) return;
+  const orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  btn.style.color = '#10b981';
+  setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
+}
+
+// ============================================================
+// WORKFLOW FUNCTIONS
+// ============================================================
+function renderWorkflowList(osFilter) {
+  const el = document.getElementById('workflow-selector');
+  if (!el) return;
+  const wfs = (!osFilter || osFilter === 'all') ? WORKFLOWS : WORKFLOWS.filter(w => w.os.includes(osFilter));
+  el.innerHTML = wfs.map(w =>
+    '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.5rem;cursor:pointer" ' +
+    'data-id="' + w.id + '" onclick="startWorkflow(\'' + w.id + '\')" tabindex="0" onkeydown="if(event.keyCode===13)startWorkflow(\'' + w.id + '\')">' +
+    '<div style="font-weight:600;font-size:0.95rem">' + w.title + '</div>' +
+    '<div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">' + w.desc + '</div>' +
+    '<div style="margin-top:0.35rem">' +
+    w.os.map(o => '<span style="font-size:0.68rem;padding:0.1rem 0.4rem;border-radius:3px;background:var(--bg4);color:var(--text-muted);margin-right:0.25rem">' + o + '</span>').join('') +
+    '<span style="font-size:0.75rem;color:var(--text-muted)">' + w.steps.length + ' steps</span>' +
+    '</div></div>'
+  ).join('');
+}
+
+function startWorkflow(id) {
+  const wf = WORKFLOWS.find(w => w.id === id);
+  if (!wf) return;
+  wfState = { id, wf, step:0 };
+  renderWorkflowStep();
+}
+
+function renderWorkflowStep() {
+  if (!wfState) return;
+  const { wf, step } = wfState;
+  const s = wf.steps[step];
+  const el = document.getElementById('workflow-box-wrap');
+  if (!el || !s) return;
+  const total = wf.steps.length;
+  const pct = Math.round(((step + 1) / total) * 100);
+  el.innerHTML =
+    '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.25rem">' +
+    '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">' +
+    '<span style="font-weight:800;color:var(--accent)">Step ' + (step+1) + ' / ' + total + '</span>' +
+    '<div style="flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden">' +
+    '<div style="height:100%;width:' + pct + '%;background:var(--accent);border-radius:2px"></div>' +
+    '</div></div>' +
+    '<h4 style="margin-bottom:0.5rem">' + s.title + '</h4>' +
+    '<p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:0.75rem;line-height:1.6">' + s.desc + '</p>' +
+    '<div style="position:relative;background:var(--bg1);border-radius:8px;border:1px solid var(--border);padding:0.75rem 4rem 0.75rem 0.75rem;margin-bottom:0.75rem">' +
+    '<pre style="margin:0;font-size:0.82rem;font-family:monospace;overflow-x:auto;white-space:pre-wrap;word-break:break-all;color:var(--accent)">' + s.cmd.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>' +
+    '<button style="position:absolute;top:0.5rem;right:0.5rem;font-size:0.75rem;padding:0.3rem 0.5rem;border-radius:5px;border:1px solid var(--border);background:var(--bg3);cursor:pointer" ' +
+    'onclick="copyWFStep()" tabindex="0">Copy</button>' +
+    '</div>' +
+    (s.notes ? '<div style="font-size:0.8rem;color:var(--text-muted);padding:0.5rem 0.75rem;background:var(--bg4);border-radius:6px;line-height:1.6;margin-bottom:0.75rem"><strong>Notes:</strong> ' + s.notes + '</div>' : '') +
+    '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem">' +
+    (step > 0 ? '<button class="quiz-next-btn" onclick="wfBack()" tabindex="0" style="background:var(--bg3)">Back</button>' : '') +
+    (step < total-1
+      ? '<button class="quiz-next-btn" onclick="wfNext()" tabindex="0">Next Step</button>'
+      : '<button class="quiz-next-btn" onclick="wfFinish()" tabindex="0" style="background:#10b981">Complete</button>') +
+    '<button class="quiz-next-btn" onclick="exitWorkflow()" tabindex="0" style="background:var(--bg4);margin-left:auto">Exit</button>' +
+    '</div></div>' +
+    '<div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem">' +
+    wf.steps.map((st, i) =>
+      '<button style="width:1.75rem;height:1.75rem;border-radius:50%;border:1px solid var(--border);font-size:0.75rem;cursor:pointer;background:' +
+      (i === step ? 'var(--accent)' : i < step ? '#10b981' : 'var(--bg3)') + ';color:' +
+      (i === step ? '#000' : i < step ? '#fff' : 'var(--text-muted)') + '" ' +
+      'onclick="jumpWFStep(' + i + ')" tabindex="0">' + (i+1) + '</button>'
+    ).join('') + '</div>';
+}
+
+function wfNext() { if (wfState && wfState.step < wfState.wf.steps.length - 1) { wfState.step++; renderWorkflowStep(); } }
+function wfBack() { if (wfState && wfState.step > 0) { wfState.step--; renderWorkflowStep(); } }
+function jumpWFStep(i) { if (wfState) { wfState.step = i; renderWorkflowStep(); } }
+
+function wfFinish() {
+  const el = document.getElementById('workflow-box-wrap');
+  if (!el || !wfState) return;
+  const id = wfState.id;
+  const title = wfState.wf.title;
+  const total = wfState.wf.steps.length;
+  wfState = null;
+  el.innerHTML =
+    '<div style="text-align:center;padding:2rem;background:var(--bg2);border:1px solid var(--border);border-radius:10px">' +
+    '<div style="font-size:2.5rem;margin-bottom:0.5rem">🎉</div>' +
+    '<h4>' + title + ' — Complete!</h4>' +
+    '<p style="color:var(--text-muted);margin:0.5rem 0 1.5rem">' + total + ' steps completed.</p>' +
+    '<div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">' +
+    '<button class="quiz-next-btn" onclick="startWorkflow(\'' + id + '\')" tabindex="0">Restart</button>' +
+    '<button class="quiz-next-btn" onclick="exitWorkflow()" tabindex="0" style="background:var(--bg3)">All Workflows</button>' +
+    '</div></div>';
+}
+
+function exitWorkflow() {
+  wfState = null;
+  const el = document.getElementById('workflow-box-wrap');
+  if (el) el.innerHTML = '';
+  renderWorkflowList('all');
+}
+
+function copyWFStep() {
+  if (!wfState) return;
+  const s = wfState.wf.steps[wfState.step];
+  if (!s) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(s.cmd).catch(() => fallbackCopy(s.cmd, null));
+  } else {
+    fallbackCopy(s.cmd, null);
+  }
+}
+
+function filterWorkflows(osFilter, btn) { renderWorkflowList(osFilter); }
+
+// ============================================================
+// INIT (runs immediately)
+// ============================================================
+(function init() {
+  buildAlphaIndex();
+  renderDict();
+  loadProgress();
+})();
