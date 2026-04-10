@@ -2031,3 +2031,462 @@ const PATHS = [
   },
 ];
 
+
+// ============================================================
+// DATA — OSI REFERENCE
+// ============================================================
+const OSI_LAYERS = [
+  {
+    num:7, name:"Application", color:"#e74c3c",
+    role:"Provides network services directly to end-user applications. Handles high-level APIs, resource sharing, and remote file/printer access.",
+    pdus:"Data",
+    protocols:"HTTP, HTTPS, FTP, SMTP, IMAP, POP3, DNS, DHCP, SSH, Telnet, SNMP, NTP, SIP, RDP, LDAP",
+    devices:"Web/Mail/DNS servers, Proxy, Load Balancer",
+    keyPoints:[
+      "Only layer that users directly interact with",
+      "Does NOT mean the application software itself lives here — it's the network service interface",
+      "Authentication, data representation choices, and directory services also live at this layer"
+    ],
+    attacks:"Phishing, XSS, SQLi, SSRF, Command Injection, BEC, API abuse, DNS hijacking",
+    controls:"WAF, NGFW (App-ID), DLP, MFA, Input validation, CSP, HSTS"
+  },
+  {
+    num:6, name:"Presentation", color:"#e67e22",
+    role:"Data translation, encryption/decryption, and compression. Ensures that data sent by the application layer of one system can be read by the application layer of another.",
+    pdus:"Data",
+    protocols:"TLS/SSL, JPEG, MPEG, GIF, PNG, ASCII, EBCDIC, XDR",
+    devices:"Gateway (conversion), SSL offload appliance",
+    keyPoints:[
+      "Handles character encoding (ASCII vs EBCDIC)",
+      "TLS operates here — encryption/decryption of data before passing to Session layer",
+      "Compression algorithms (zlib, gzip) operate here"
+    ],
+    attacks:"SSL stripping, Cipher downgrade, BEAST, POODLE",
+    controls:"TLS 1.3, Strong cipher suites, HSTS, Certificate pinning"
+  },
+  {
+    num:5, name:"Session", color:"#f1c40f",
+    role:"Establishes, manages, and terminates sessions between applications. Provides checkpointing, recovery, and restart procedures.",
+    pdus:"Data",
+    protocols:"NetBIOS, RPC, PPTP, SIP (session management), SQL sessions",
+    devices:"Gateway",
+    keyPoints:[
+      "Manages dialog control: half-duplex vs full-duplex",
+      "Provides synchronisation points (checkpoints) for long data transfers",
+      "Session hijacking attacks target this layer's session tokens"
+    ],
+    attacks:"Session hijacking, Session fixation, Cookie theft",
+    controls:"Secure session tokens, HttpOnly+Secure+SameSite cookies, Re-authentication, Short session timeouts"
+  },
+  {
+    num:4, name:"Transport", color:"#2ecc71",
+    role:"End-to-end communication, flow control, error recovery, and multiplexing via ports. Segments data from upper layers and reassembles for lower layers.",
+    pdus:"Segment (TCP) / Datagram (UDP)",
+    protocols:"TCP, UDP, SCTP, QUIC, TLS (over TCP)",
+    devices:"Firewall (stateful), Load Balancer",
+    keyPoints:[
+      "TCP: reliable, connection-oriented (3-way handshake), ordered, error-checked",
+      "UDP: fast, connectionless, no reliability guarantees — used for VoIP, DNS, streaming",
+      "Port numbers (0–65535) multiplex services: Well-known 0–1023, Registered 1024–49151, Dynamic/Ephemeral 49152–65535",
+      "TCP flags: SYN, ACK, FIN, RST, PSH, URG"
+    ],
+    attacks:"SYN flood, Session hijacking (TCP seq prediction), UDP flood, Port scanning",
+    controls:"SYN cookies, Stateful firewalls, Rate limiting, TCP randomised ISN"
+  },
+  {
+    num:3, name:"Network", color:"#3498db",
+    role:"Logical addressing and routing. Determines the best path through the network for packets to travel from source to destination.",
+    pdus:"Packet",
+    protocols:"IPv4, IPv6, ICMP, ICMPv6, OSPF, BGP, EIGRP, RIP, ARP (adjacent), IPsec",
+    devices:"Router, Layer 3 Switch, Firewall, VPN Gateway",
+    keyPoints:[
+      "IP addresses (logical) operate here — routable across networks",
+      "TTL (Time to Live) decremented at each hop — prevents infinite loops",
+      "Fragmentation occurs when packet exceeds MTU (default 1500 bytes Ethernet)",
+      "Routing decisions: longest prefix match in routing table"
+    ],
+    attacks:"IP spoofing, ICMP flood, Smurf attack, BGP hijacking, Route injection, Teardrop",
+    controls:"ACLs, RPF (Reverse Path Forwarding), URPF, BGP route filtering, IPsec"
+  },
+  {
+    num:2, name:"Data Link", color:"#9b59b6",
+    role:"Node-to-node delivery within the same network segment. Handles MAC addressing, frame formatting, error detection (CRC), and media access control.",
+    pdus:"Frame",
+    protocols:"Ethernet (IEEE 802.3), Wi-Fi (802.11), 802.1Q VLAN, STP (802.1D), ARP, PPP, HDLC",
+    devices:"Switch, Bridge, Wireless Access Point, NIC",
+    keyPoints:[
+      "MAC addresses: 48-bit hardware addresses (burned into NIC)",
+      "Two sub-layers: LLC (Logical Link Control) and MAC (Media Access Control)",
+      "Switches operate here — build MAC address tables, forward frames per port",
+      "CRC (Cyclic Redundancy Check) detects frame errors"
+    ],
+    attacks:"ARP spoofing, MAC flooding, VLAN hopping (double tagging), STP attacks, Rogue AP",
+    controls:"Dynamic ARP Inspection (DAI), Port security, BPDU Guard, 802.1X, Private VLANs"
+  },
+  {
+    num:1, name:"Physical", color:"#95a5a6",
+    role:"Transmission and reception of raw bit streams over a physical medium. Defines electrical, optical, and mechanical characteristics.",
+    pdus:"Bit",
+    protocols:"Ethernet (physical: 1000BASE-T, 10GBASE-SR), USB, DSL, SONET/SDH, RS-232, 802.11 (RF)",
+    devices:"Hub, Repeater, Modem, Cable, NIC (PHY layer), Transceiver",
+    keyPoints:[
+      "Deals with voltage levels, bit timing, cable specifications, connector types",
+      "Transmission media: copper (UTP/STP), fibre (SMF/MMF), wireless (RF)",
+      "Encoding: Manchester, NRZ, 4B5B",
+      "No addressing — bits only"
+    ],
+    attacks:"Physical wiretapping, Cable cutting, Jamming (RF), Keystroke logging (hardware), Evil maid",
+    controls:"Physical locks, Cable management, RF shielding, Network TAP monitoring, Camera surveillance"
+  }
+];
+
+// ============================================================
+// DATA — COMMON PORTS REFERENCE
+// ============================================================
+const PORTS = [
+  { port:20, proto:"TCP", service:"FTP Data", cat:"file", notes:"Active mode data channel. Passive mode uses ephemeral ports." },
+  { port:21, proto:"TCP", service:"FTP Control", cat:"file", notes:"Commands/responses. Plaintext — use SFTP or FTPS instead." },
+  { port:22, proto:"TCP", service:"SSH / SFTP / SCP", cat:"remote", notes:"Secure Shell, Secure File Transfer, Secure Copy. Key-based auth preferred." },
+  { port:23, proto:"TCP", service:"Telnet", cat:"remote", notes:"Unencrypted remote login. Replace with SSH. Still found on legacy network gear." },
+  { port:25, proto:"TCP", service:"SMTP", cat:"email", notes:"Mail server to mail server. Open relay = spam risk. Auth on port 587." },
+  { port:53, proto:"UDP/TCP", service:"DNS", cat:"infra", notes:"UDP for queries; TCP for zone transfers and large responses (>512 bytes without EDNS0)." },
+  { port:67, proto:"UDP", service:"DHCP Server", cat:"infra", notes:"Server listens. Client sends to broadcast 255.255.255.255." },
+  { port:68, proto:"UDP", service:"DHCP Client", cat:"infra", notes:"Client source port in DHCP exchanges." },
+  { port:69, proto:"UDP", service:"TFTP", cat:"file", notes:"Trivial FTP — no auth, no encryption. Used for network booting (PXE), IOS upgrades." },
+  { port:80, proto:"TCP", service:"HTTP", cat:"web", notes:"Unencrypted web traffic. Redirect to 443 (HTTPS). HSTS prevents downgrade." },
+  { port:88, proto:"UDP/TCP", service:"Kerberos", cat:"auth", notes:"Windows Active Directory authentication. Requires accurate time (NTP)." },
+  { port:110, proto:"TCP", service:"POP3", cat:"email", notes:"Download and delete email. Plaintext. POP3S on 995." },
+  { port:119, proto:"TCP", service:"NNTP", cat:"other", notes:"Network News Transfer Protocol (Usenet)." },
+  { port:123, proto:"UDP", service:"NTP", cat:"infra", notes:"Time sync — critical for Kerberos, TLS cert validation, log correlation." },
+  { port:135, proto:"TCP", service:"MS-RPC", cat:"windows", notes:"Windows RPC endpoint mapper. Targeted by worms (Blaster). Block at perimeter." },
+  { port:137, proto:"UDP", service:"NetBIOS Name", cat:"windows", notes:"NetBIOS name resolution. Block at perimeter; LLMNR/NBNS poisoning attacks." },
+  { port:138, proto:"UDP", service:"NetBIOS Datagram", cat:"windows", notes:"NetBIOS datagram service." },
+  { port:139, proto:"TCP", service:"NetBIOS Session", cat:"windows", notes:"NetBIOS session service (SMB over NetBIOS)." },
+  { port:143, proto:"TCP", service:"IMAP", cat:"email", notes:"Email retrieval — keeps mail on server. IMAPS on 993." },
+  { port:161, proto:"UDP", service:"SNMP", cat:"mgmt", notes:"Agent polling. v1/v2c plaintext community strings. Use SNMPv3 with auth+priv." },
+  { port:162, proto:"UDP", service:"SNMP Trap", cat:"mgmt", notes:"Devices send alerts (traps) to manager unsolicited." },
+  { port:179, proto:"TCP", service:"BGP", cat:"routing", notes:"Border Gateway Protocol — internet's routing protocol. Must be secured (MD5 auth minimum, RPKI)." },
+  { port:389, proto:"TCP", service:"LDAP", cat:"auth", notes:"Directory service queries. Plaintext. Use LDAPS (636) or StartTLS." },
+  { port:443, proto:"TCP", service:"HTTPS", cat:"web", notes:"HTTP over TLS. Default for secure web. HTTP/3 uses QUIC/UDP 443." },
+  { port:445, proto:"TCP", service:"SMB", cat:"windows", notes:"Windows file sharing (CIFS/SMB). Targeted by EternalBlue/WannaCry. Block at perimeter." },
+  { port:465, proto:"TCP", service:"SMTPS", cat:"email", notes:"SMTP over implicit TLS (deprecated by RFC, still widely used)." },
+  { port:500, proto:"UDP", service:"IKE (IPsec)", cat:"vpn", notes:"Internet Key Exchange for IPsec VPNs. IKEv2 preferred." },
+  { port:514, proto:"UDP", service:"Syslog", cat:"mgmt", notes:"Plaintext log forwarding. Use TLS syslog (6514) for integrity. Easy to spoof." },
+  { port:515, proto:"TCP", service:"LPD/LPR", cat:"other", notes:"Line Printer Daemon — legacy printing protocol." },
+  { port:587, proto:"TCP", service:"SMTP Submission", cat:"email", notes:"Email client to server. Requires STARTTLS + auth. Preferred over 25 for submission." },
+  { port:636, proto:"TCP", service:"LDAPS", cat:"auth", notes:"LDAP over TLS. Use instead of plain LDAP (389) for encrypted directory queries." },
+  { port:853, proto:"TCP", service:"DNS over TLS (DoT)", cat:"infra", notes:"Encrypts DNS queries between client and resolver. Hides query content from observers." },
+  { port:902, proto:"TCP", service:"VMware ESXi", cat:"other", notes:"VMware vSphere client communications." },
+  { port:993, proto:"TCP", service:"IMAPS", cat:"email", notes:"IMAP over TLS. Preferred over plain IMAP (143)." },
+  { port:995, proto:"TCP", service:"POP3S", cat:"email", notes:"POP3 over TLS. Preferred over plain POP3 (110)." },
+  { port:1194, proto:"UDP", service:"OpenVPN", cat:"vpn", notes:"Default OpenVPN port. Can also run on TCP 443 to bypass restrictive firewalls." },
+  { port:1433, proto:"TCP", service:"MS SQL Server", cat:"db", notes:"Microsoft SQL Server. Should never be internet-exposed. Use VPN/jump host." },
+  { port:1521, proto:"TCP", service:"Oracle DB", cat:"db", notes:"Oracle Database listener. Keep behind firewall." },
+  { port:1701, proto:"UDP", service:"L2TP", cat:"vpn", notes:"Layer 2 Tunneling Protocol. No encryption by itself — used with IPsec." },
+  { port:1723, proto:"TCP", service:"PPTP", cat:"vpn", notes:"Point-to-Point Tunneling Protocol. Cryptographically broken (MS-CHAPv2). Do not use." },
+  { port:2049, proto:"TCP/UDP", service:"NFS", cat:"file", notes:"Network File System. Ensure proper export restrictions and Kerberos auth for NFSv4." },
+  { port:3306, proto:"TCP", service:"MySQL / MariaDB", cat:"db", notes:"Common database port. Never expose to internet directly." },
+  { port:3389, proto:"TCP", service:"RDP", cat:"remote", notes:"Remote Desktop Protocol. Targeted by brute force and ransomware. Restrict to VPN only. Enable NLA." },
+  { port:4444, proto:"TCP", service:"Metasploit default", cat:"other", notes:"Default Metasploit listener — presence in logs indicates potential compromise." },
+  { port:4500, proto:"UDP", service:"IPsec NAT-T", cat:"vpn", notes:"IPsec NAT traversal — encapsulates ESP in UDP to cross NAT devices." },
+  { port:5060, proto:"UDP/TCP", service:"SIP", cat:"voip", notes:"Session Initiation Protocol (VoIP signalling). Use SIPS (5061/TLS) and SRTP for media." },
+  { port:5432, proto:"TCP", service:"PostgreSQL", cat:"db", notes:"PostgreSQL database. Restrict with pg_hba.conf. Never expose to internet." },
+  { port:5900, proto:"TCP", service:"VNC", cat:"remote", notes:"Virtual Network Computing. Weak authentication history. Tunnel via SSH." },
+  { port:6379, proto:"TCP", service:"Redis", cat:"db", notes:"In-memory data store. Historically no auth by default — often exposed and compromised." },
+  { port:6514, proto:"TCP", service:"Syslog over TLS", cat:"mgmt", notes:"Encrypted syslog. Use instead of UDP 514 for tamper-resistant log transport." },
+  { port:8080, proto:"TCP", service:"HTTP Alt / Proxy", cat:"web", notes:"Alternative HTTP port. Common for web proxies, development servers, Tomcat." },
+  { port:8443, proto:"TCP", service:"HTTPS Alt", cat:"web", notes:"Alternative HTTPS. Tomcat, management interfaces." },
+  { port:9200, proto:"TCP", service:"Elasticsearch", cat:"db", notes:"Elasticsearch REST API. Frequently exposed without auth — major data breach risk." },
+  { port:27017, proto:"TCP", service:"MongoDB", cat:"db", notes:"MongoDB. Historically no auth by default. Restrict strictly." },
+  { port:51820, proto:"UDP", service:"WireGuard", cat:"vpn", notes:"Default WireGuard VPN port. Modern, high-performance VPN protocol." },
+];
+
+// ============================================================
+// DATA — ROUTING PROTOCOLS COMPARISON
+// ============================================================
+const ROUTING = [
+  {
+    name:"RIP v2", type:"Distance Vector", algo:"Bellman-Ford", metric:"Hop count (max 15)",
+    ad:120, convergence:"Slow (30s updates)", scalability:"Small networks only",
+    multicast:"224.0.0.9", auth:"MD5", standard:"RFC 2453",
+    pros:["Simple to configure","Low CPU/memory","Supported everywhere"],
+    cons:["Max 15 hops (16=unreachable)","Slow convergence","Full table updates every 30s","No VLSM support in v1"]
+  },
+  {
+    name:"OSPF v2/v3", type:"Link State", algo:"Dijkstra SPF", metric:"Cost (reference bandwidth/link bandwidth)",
+    ad:110, convergence:"Fast (sub-second with BFD)", scalability:"Large enterprise",
+    multicast:"224.0.0.5 (all OSPF) / 224.0.0.6 (DR/BDR)", auth:"MD5 / SHA (OSPFv3 IPsec)",
+    standard:"RFC 2328 (v2) / RFC 5340 (v3)",
+    pros:["Fast convergence","Hierarchical areas reduce LSA flooding","No hop count limit","Partial updates","OSPFv3 supports IPv6"],
+    cons:["Complex configuration","Memory intensive (LSDB)","DR/BDR election complexity","Requires hierarchical area design for scale"]
+  },
+  {
+    name:"EIGRP", type:"Advanced Distance Vector", algo:"DUAL (Diffusing Update Algorithm)", metric:"Bandwidth + Delay (composite)",
+    ad:"90 (internal) / 170 (external)", convergence:"Very fast (pre-computed feasible successors)",
+    scalability:"Large enterprise", multicast:"224.0.0.10", auth:"MD5 / SHA-256",
+    standard:"RFC 7868 (open standard since 2016)",
+    pros:["Very fast convergence","Partial updates","Unequal-cost load balancing","Simple for Cisco shops"],
+    cons:["Historically Cisco proprietary","Less supported on non-Cisco devices","More complex metric than OSPF"]
+  },
+  {
+    name:"BGP v4", type:"Path Vector", algo:"Best Path (attribute-based)", metric:"AS_PATH, LOCAL_PREF, MED, Weight, etc.",
+    ad:"20 (eBGP) / 200 (iBGP)", convergence:"Slow (minutes)", scalability:"Internet scale (900K+ routes)",
+    multicast:"None (TCP unicast port 179)", auth:"MD5 TCP auth / RPKI",
+    standard:"RFC 4271",
+    pros:["Internet's routing protocol","Rich policy controls","Scales to full internet routing table","iBGP/eBGP flexibility"],
+    cons:["Complex configuration","Slow convergence","Route hijacking/leaks (needs RPKI)","Requires full mesh or route reflectors for iBGP"]
+  },
+  {
+    name:"IS-IS", type:"Link State", algo:"Dijkstra SPF", metric:"Metric (10 by default, no physical meaning)",
+    ad:115, convergence:"Fast", scalability:"Large ISP/carrier",
+    multicast:"N/A (L2 multicast)", auth:"MD5", standard:"ISO 10589 / RFC 5308 (IPv6)",
+    pros:["Single instance handles IPv4+IPv6","Preferred by ISPs and large carriers","Highly scalable","Protocol-agnostic (runs directly over L2)"],
+    cons:["Less common in enterprise","Less intuitive than OSPF","Limited vendor tooling compared to OSPF"]
+  },
+  {
+    name:"Static Route", type:"Manual", algo:"N/A", metric:"Configurable (usually 1)",
+    ad:1, convergence:"N/A (no dynamic update)", scalability:"Small networks / specific paths",
+    multicast:"N/A", auth:"N/A", standard:"N/A",
+    pros:["Predictable and deterministic","No overhead","Secure (no routing protocol attack surface)","Good for default routes and stubs"],
+    cons:["No automatic failover","Administrative overhead at scale","Human error risk","Does not adapt to topology changes"]
+  }
+];
+
+// ============================================================
+// DATA — THREAT MODELLING (STRIDE)
+// ============================================================
+const STRIDE = [
+  {
+    letter:"S", threat:"Spoofing", property:"Authentication",
+    desc:"Attacker impersonates a legitimate user, system, or service to gain unauthorised access.",
+    examples:["ARP spoofing (MAC impersonation)","IP spoofing in DoS attacks","Email sender spoofing (phishing)","Forged Kerberos tickets (Golden Ticket)","DNS spoofing"],
+    controls:["Strong authentication (MFA, FIDO2)","Mutual TLS (mTLS)","DMARC + SPF + DKIM for email","DNSSEC","802.1X port authentication"]
+  },
+  {
+    letter:"T", threat:"Tampering", property:"Integrity",
+    desc:"Unauthorised modification of data in transit or at rest.",
+    examples:["MitM bit-flipping attacks on unauthed ciphertext","SQL UPDATE without authorisation","Log tampering to cover tracks","Malicious code injection in CI/CD pipeline"],
+    controls:["HMAC / AEAD (AES-GCM)","Digital signatures (code signing)","Write-once audit logs (WORM)","File integrity monitoring (Tripwire, AIDE)","Secure CI/CD pipelines with signing"]
+  },
+  {
+    letter:"R", threat:"Repudiation", property:"Non-repudiation",
+    desc:"User denies performing an action, with no proof to refute the denial.",
+    examples:["Admin claims they didn't delete a record","Attacker covers tracks by clearing logs","Transaction denial in financial systems"],
+    controls:["Audit logs with timestamps (signed/WORM)","Digital signatures on transactions","Centralised SIEM with tamper-evident log forwarding","User attribution in all logs"]
+  },
+  {
+    letter:"I", threat:"Information Disclosure", property:"Confidentiality",
+    desc:"Sensitive data exposed to unauthorised parties.",
+    examples:["Unencrypted traffic sniffing","Error messages revealing stack traces","Directory traversal exposing files","Insecure S3 bucket (public read)","Verbose API responses leaking PII"],
+    controls:["Encryption in transit (TLS 1.3) and at rest (AES-256)","Least privilege data access","Data masking / tokenisation","Proper error handling (no stack traces to users)","DLP policies"]
+  },
+  {
+    letter:"D", threat:"Denial of Service", property:"Availability",
+    desc:"Making a service unavailable to legitimate users.",
+    examples:["DDoS volumetric flood","SYN flood exhausting TCP state table","Slowloris (slow HTTP headers)","Resource exhaustion (CPU/memory)","Ransomware encrypting critical systems"],
+    controls:["CDN / DDoS scrubbing (Cloudflare, AWS Shield)","Rate limiting and connection limits","SYN cookies","Auto-scaling","BCP/DR planning","Redundant systems (HA)"]
+  },
+  {
+    letter:"E", threat:"Elevation of Privilege", property:"Authorisation",
+    desc:"Gaining higher permissions than authorised.",
+    examples:["Local privilege escalation via kernel exploit","SUDO misconfigurations","JWT alg:none bypass","IDOR to access other users' data","Kerberoasting → service account → admin"],
+    controls:["Principle of least privilege","Regular privilege audits","Patch OS/kernel promptly","EDR for exploit detection","Kerberos delegation restrictions","PAM for privileged access"]
+  }
+];
+
+// ============================================================
+// DATA — TLS HANDSHAKE FLOW (TLS 1.3)
+// ============================================================
+const TLS_STEPS = [
+  {
+    step:1, actor:"Client→Server", msg:"ClientHello",
+    detail:"Client sends: TLS version (1.3), random nonce, session ID, supported cipher suites (TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256), supported groups (x25519, P-256), key_share extension (client's ephemeral public key for ECDHE).",
+    security:"Cipher suite list establishes forward secrecy requirement. No legacy suites (RC4, 3DES, NULL) in TLS 1.3."
+  },
+  {
+    step:2, actor:"Server→Client", msg:"ServerHello",
+    detail:"Server selects cipher suite and key exchange group, generates its own ephemeral key pair, sends its public key in key_share. Both sides can now compute the shared secret via ECDHE.",
+    security:"At this point, the session key is derived (HKDF). All subsequent messages are encrypted."
+  },
+  {
+    step:3, actor:"Server→Client", msg:"EncryptedExtensions",
+    detail:"Server sends additional negotiated parameters (ALPN, server name, max early data size) now encrypted inside the new session.",
+    security:"Extensions encrypted — prevents downgrade attacks that were possible with TLS 1.2 where extensions were in the clear."
+  },
+  {
+    step:4, actor:"Server→Client", msg:"Certificate",
+    detail:"Server sends its X.509 certificate chain (encrypted). Client validates: signature from trusted CA, SANs match hostname, not expired, not revoked (OCSP/CRL).",
+    security:"Certificate pinning (HPKP deprecated — use Expect-CT or baked-in pins) further restricts accepted certs."
+  },
+  {
+    step:5, actor:"Server→Client", msg:"CertificateVerify",
+    detail:"Server signs a transcript hash of the entire handshake so far using its private key. Proves it possesses the private key matching the certificate's public key.",
+    security:"Binds the server's identity to this specific handshake — prevents replay and identity attacks."
+  },
+  {
+    step:6, actor:"Server→Client", msg:"Finished (Server)",
+    detail:"HMAC over handshake transcript using the derived server_finished_key. Verifies handshake integrity.",
+    security:"Any tampering with earlier messages would cause this verification to fail."
+  },
+  {
+    step:7, actor:"Client→Server", msg:"Finished (Client)",
+    detail:"HMAC over handshake transcript using client_finished_key. Mutual verification complete. Application data can now flow.",
+    security:"TLS 1.3 completes in 1-RTT (vs 2-RTT for TLS 1.2). 0-RTT resumption possible (replay risk — safe only for idempotent requests)."
+  }
+];
+
+// ============================================================
+// DATA — DEFENCE-IN-DEPTH LAYERS
+// ============================================================
+const DEFENCE_LAYERS = [
+  {
+    layer:"Data", icon:"🗄️", color:"#e74c3c",
+    controls:["Encryption at rest (AES-256, TDE, FDE)","Encryption in transit (TLS 1.3, mTLS)","Data classification (Public, Internal, Confidential, Restricted)","DLP (Data Loss Prevention)","Database activity monitoring","Tokenisation / data masking","Backup and recovery (3-2-1 rule: 3 copies, 2 media, 1 offsite)"],
+    threats:"Data breaches, ransomware encryption, insider theft, accidental exposure"
+  },
+  {
+    layer:"Application", icon:"💻", color:"#e67e22",
+    controls:["Secure SDLC (threat modelling, code review)","SAST, DAST, SCA in CI/CD","WAF (OWASP rule sets + ML)","Input validation and output encoding","Parameterised queries (prevent SQLi)","CSP, HSTS, Secure cookie flags","Authentication (MFA, FIDO2) and authorisation (RBAC/ABAC)","API security (rate limiting, ****** key, JWT validation)"],
+    threats:"OWASP Top 10, API abuse, authentication bypass, business logic flaws"
+  },
+  {
+    layer:"Endpoint", icon:"🖥️", color:"#f1c40f",
+    controls:["EDR / XDR (CrowdStrike, SentinelOne, Microsoft Defender)","Full disk encryption (BitLocker, FileVault, dm-crypt)","Patch management (automated OS + app)","Application whitelisting / control","USB port control","Host-based firewall","Device compliance checks (MDM/EMM)","Secure boot + TPM attestation"],
+    threats:"Malware, ransomware, USB drops, supply chain, unpatched CVEs, rootkits"
+  },
+  {
+    layer:"Network", icon:"🌐", color:"#2ecc71",
+    controls:["Perimeter firewall (NGFW with IPS)","Network segmentation (VLANs, micro-segmentation)","Zero Trust Network Access (ZTNA)","IDS/IPS (Suricata, Snort, Zeek)","Network TAP + full packet capture","DNS filtering / RPZ","Proxy and SSL inspection","DDoS mitigation (CDN, BGP blackhole, scrubbing)","802.1X (port-based NAC)"],
+    threats:"Lateral movement, DDoS, MitM, network scanning, exfiltration"
+  },
+  {
+    layer:"Identity & Access", icon:"🔑", color:"#3498db",
+    controls:["MFA everywhere (TOTP, FIDO2/WebAuthn)","SSO with OIDC/SAML","Privileged Access Management (PAM)","Just-in-time access","Password manager + policy (≥16 chars, complexity, no reuse)","Zero Trust principles (continuous verification)","Identity governance (access reviews)","Conditional access policies"],
+    threats:"Credential theft, phishing, BEC, privilege escalation, insider threat"
+  },
+  {
+    layer:"Physical", icon:"🏢", color:"#9b59b6",
+    controls:["Badge access control (RFID/NFC with strong crypto)","CCTV and motion detection","Security guards and visitor management","Mantrap / airlock entry","Clean desk policy","Device encryption (laptop = useless if stolen + encrypted)","Server room environmental controls (temp, humidity, fire suppression)","Cable management and port locks"],
+    threats:"Physical theft, tailgating, evil maid, hardware implants, shoulder surfing"
+  },
+  {
+    layer:"Policies & Processes", icon:"📋", color:"#95a5a6",
+    controls:["Information Security Policy","Incident Response Plan (NIST 800-61)","Business Continuity / Disaster Recovery","Security Awareness Training (phishing simulations)","Vulnerability Management Programme","Third-party / vendor risk management","Change management process","Penetration testing schedule","Tabletop exercises"],
+    threats:"Untrained users, unclear accountability, slow incident response, compliance failures"
+  }
+];
+
+// ============================================================
+// DATA — NETWORK ARCHITECTURE DIAGRAMS (text-based)
+// ============================================================
+const ARCH_DIAGRAMS = [
+  {
+    id:"three-tier",
+    title:"Three-Tier Network Architecture",
+    desc:"Classic enterprise design separating access, distribution, and core layers for scalability and fault isolation.",
+    diagram:`
+┌─────────────────────────────────────────────────────────────┐
+│                      INTERNET / WAN                          │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+         ┌─────────────▼─────────────┐
+         │    PERIMETER FIREWALL     │  ← Stateful/NGFW, ACLs
+         │    (Active/Passive HA)    │    IPS, SSL Inspection
+         └─────────────┬─────────────┘
+                       │
+         ┌─────────────▼─────────────┐
+         │          DMZ              │  ← Web servers, Mail relay
+         │  Web  │  Mail  │  VPN GW  │    DNS, Reverse proxy
+         └─────────────┬─────────────┘
+                       │
+         ┌─────────────▼─────────────┐
+         │    INTERNAL FIREWALL      │  ← Strict DMZ→Internal rules
+         └─────────────┬─────────────┘
+                       │
+    ┌──────────────────┼──────────────────┐
+    │                  │                  │
+┌───▼───┐        ┌─────▼─────┐     ┌─────▼─────┐
+│  CORE │        │   CORE    │     │  Servers  │
+│  SW1  │◄──────►│   SW2     │     │  VLAN 10  │
+└───┬───┘        └─────┬─────┘     └───────────┘
+    │                  │
+┌───▼───┐        ┌─────▼─────┐
+│ DIST  │        │   DIST    │  ← Distribution: SVI, inter-VLAN
+│  SW3  │        │   SW4     │    routing, QoS policies
+└───┬───┘        └─────┬─────┘
+    │                  │
+┌───▼────────────────────▼───┐
+│     ACCESS SWITCHES        │  ← End devices, 802.1X, DHCP
+│  (802.1X, Port Security)   │    snooping, DAI, Storm control
+└────────────────────────────┘`,
+    notes:["Core layer: high-speed backbone, no packet filtering","Distribution: policy enforcement, inter-VLAN routing, redundancy","Access: user connectivity, security policies per port","Each tier should be redundant (dual uplinks, HSRP/VRRP)"]
+  },
+  {
+    id:"zero-trust",
+    title:"Zero Trust Architecture",
+    desc:"Identity-centric model where every access request is fully authenticated, authorised, and encrypted regardless of location.",
+    diagram:`
+┌───────────────────────────────────────────────────────────┐
+│              USERS (Any Location, Any Device)              │
+│    Corporate Office │ Remote/Home │ Mobile │ Branch        │
+└──────────┬──────────────────┬──────────────┬──────────────┘
+           │                  │              │
+           ▼                  ▼              ▼
+┌──────────────────────────────────────────────────────────┐
+│              IDENTITY & DEVICE VERIFICATION               │
+│   IdP (Okta/Azure AD) + MFA + Device Compliance Check    │
+│   Conditional Access: Is device managed? Patch level?    │
+└──────────────────────────┬───────────────────────────────┘
+                           │  Verified identity + device
+                           ▼
+┌──────────────────────────────────────────────────────────┐
+│              POLICY ENFORCEMENT POINT (PEP)               │
+│         ZTNA Broker / CASB / SWG / SSE Platform          │
+│   Zscaler ZPA │ Cloudflare Access │ Palo Alto Prisma     │
+└────┬───────────────────┬───────────────────┬─────────────┘
+     │                   │                   │
+     ▼                   ▼                   ▼
+┌─────────┐       ┌─────────────┐     ┌───────────────┐
+│ App A   │       │   App B     │     │  Cloud App C  │
+│(Internal│       │ (SaaS/Cloud)│     │   (AWS/Azure) │
+│ Server) │       │             │     │               │
+└─────────┘       └─────────────┘     └───────────────┘
+     ▲                   ▲                   ▲
+     └───────────────────┴───────────────────┘
+          Micro-segmented, encrypted tunnels
+          App IPs never exposed to internet
+          Continuous session monitoring`,
+    notes:["Never expose application IPs to internet — only ZTNA broker endpoints","Per-application access grants (not broad network access like VPN)","Continuous monitoring: anomaly detection during session","Device posture checked at every access request"]
+  },
+  {
+    id:"cloud-shared",
+    title:"Cloud Shared Responsibility Model",
+    desc:"Delineates security responsibilities between cloud provider (CSP) and customer across different service models.",
+    diagram:`
+                IaaS          PaaS          SaaS
+             ┌─────────┐  ┌─────────┐  ┌─────────┐
+Data         │CUSTOMER │  │CUSTOMER │  │CUSTOMER │ ← Always customer
+             ├─────────┤  ├─────────┤  ├─────────┤
+Applications │CUSTOMER │  │CUSTOMER │  │  CSP    │
+             ├─────────┤  ├─────────┤  ├─────────┤
+Runtime      │CUSTOMER │  │  CSP    │  │  CSP    │
+             ├─────────┤  ├─────────┤  ├─────────┤
+Middleware   │CUSTOMER │  │  CSP    │  │  CSP    │
+             ├─────────┤  ├─────────┤  ├─────────┤
+OS           │CUSTOMER │  │  CSP    │  │  CSP    │
+             ├─────────┤  ├─────────┤  ├─────────┤
+Virtualise   │  CSP    │  │  CSP    │  │  CSP    │
+             ├─────────┤  ├─────────┤  ├─────────┤
+Hardware     │  CSP    │  │  CSP    │  │  CSP    │
+             ├─────────┤  ├─────────┤  ├─────────┤
+Facilities   │  CSP    │  │  CSP    │  │  CSP    │
+             └─────────┘  └─────────┘  └─────────┘
+
+Examples:
+  IaaS: AWS EC2, Azure VM, GCP Compute Engine
+  PaaS: AWS Elastic Beanstalk, Azure App Service, Heroku
+  SaaS: Microsoft 365, Salesforce, Google Workspace`,
+    notes:["IaaS: you manage OS, apps, data, runtime — CSP manages hardware+virt","PaaS: you manage apps and data only","SaaS: you manage data and access controls only","Identity and Access Management is ALWAYS the customer's responsibility across all models","'Secure by default' ≠ 'secure for your use case' — misconfigurations are the #1 cloud breach cause"]
+  }
+];
+
