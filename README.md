@@ -6,7 +6,7 @@
 
 ## Features
 
-- 35+ cybersecurity terms across six categories: **Attack, Defense, Concept, Tool, Protocol, Standard**
+- 43 cybersecurity terms across six categories: **Attack, Defense, Concept, Tool, Protocol, Standard**
 - Instant full-text search — searches term names, definitions, and "see also" tags
 - Filterable by category via pill buttons
 - Expandable detail cards with examples, prevention tips, and cross-references
