@@ -3303,7 +3303,7 @@ function renderPortRows(ports) {
 }
 
 function setPortFilter(type) {
-  document.querySelectorAll('.port-filter-btn').forEach(b => {
+  document.querySelectorAll('#port-filters button').forEach(b => {
     b.classList.toggle('active', (b.getAttribute('onclick') || '').includes("'" + type + "'"));
   });
   let filtered = PORTS;
